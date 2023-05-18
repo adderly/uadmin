@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/uadmin/uadmin"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options"
 
 	"golang.org/x/mod/modfile"
 )
@@ -111,8 +111,8 @@ func main() {
 
 		// The path from where to copy static files and templates will depend on
 		// where uadmin folder is located:
-		// pre 1.16 with no modules: $GOPATH/src/github.com/uadmin/uadmin
-		// 1.16 and above: $GOPATH/pkg/mod/github.com/uadmin/uadmin@$uadmin.Version
+		// pre 1.16 with no modules: $GOPATH/src/github.com/rkj-tech/uadmin-with-postgres-ssl-options
+		// 1.16 and above: $GOPATH/pkg/mod/github.com/rkj-tech/uadmin-with-postgres-ssl-options@$uadmin.Version
 		// where uadmin.Verion is the installed version of uAdmin
 		uadminPathSrc := []string{goPath, "src", "github.com", "uadmin", "uadmin"}
 		uadminPathMod := []string{goPath, "pkg", "mod", "github.com", "uadmin", "uadmin@v" + strings.TrimPrefix(uadmin.Version, "v")}
@@ -123,7 +123,7 @@ func main() {
 			fs, err := modfile.Parse("go.mod", buf, nil)
 			if err == nil {
 				for i := range fs.Require {
-					if fs.Require[i].Mod.Path == "github.com/uadmin/uadmin" {
+					if fs.Require[i].Mod.Path == "github.com/rkj-tech/uadmin-with-postgres-ssl-options" {
 						uadminPathMod[len(uadminPathMod)-1] = "uadmin@v" + strings.TrimPrefix(fs.Require[i].Mod.Version, "v")
 						break
 					}
@@ -131,7 +131,7 @@ func main() {
 
 				// Search for replace
 				for i := range fs.Replace {
-					if fs.Replace[i].Old.Path == "github.com/uadmin/uadmin" {
+					if fs.Replace[i].Old.Path == "github.com/rkj-tech/uadmin-with-postgres-ssl-options" {
 						// Check if new if a new is a file system path or module path
 						if strings.HasPrefix(fs.Replace[i].New.Path, "./") ||
 							strings.HasPrefix(fs.Replace[i].New.Path, "/") ||

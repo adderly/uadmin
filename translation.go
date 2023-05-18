@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/uadmin/uadmin/colors"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/colors"
 )
 
 // Translation is for multilingual fields

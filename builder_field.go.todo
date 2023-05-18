@@ -1,7 +1,7 @@
 package uadmin
 
 import (
-	"github.com/uadmin/uadmin/helper"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/helper"
 	"strings"
 )
 

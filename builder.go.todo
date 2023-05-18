@@ -1,7 +1,7 @@
 package uadmin
 
 import (
-	"github.com/uadmin/uadmin/helper"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/helper"
 	"io/ioutil"
 	"strings"
 )
@@ -32,7 +32,7 @@ func (b *Builder) Save() {
 	fields := []BuilderField{}
 	Filter(&fields, "builder_id = ?", b.ID)
 
-	imports := []string{"\t\"github.com/uadmin/uadmin\""}
+	imports := []string{"\t\"github.com/rkj-tech/uadmin-with-postgres-ssl-options\""}
 	fCodes := []string{"\tuadmin.Model"}
 
 	for _, f := range fields {

@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uadmin/uadmin/colors"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/colors"
 )
 
 const welcomeMessage = "" +

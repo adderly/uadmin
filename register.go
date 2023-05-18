@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/jinzhu/inflection"
-	"github.com/uadmin/uadmin/helper"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/helper"
 )
 
 // HideInDashboarder used to check if a model should be hidden in
