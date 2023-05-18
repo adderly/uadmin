@@ -39,7 +39,7 @@ const (
 	// Try SSL first, if not available continue with no SSL
 	Prefer SSL = "prefer"
 	// Only SSL. Refuse the connection if SSL cannot be established
-	Required SSL = "required"
+	Require SSL = "require"
 	// Only SSL, and verify that the server certificate is issued by a trusted certificate authority (CA)
 	VerifyCa SSL = "verify-ca"
 	// Only SSL, verify that the server certificate is issued by a trusted CA and that the server host name matches that in the certificate
