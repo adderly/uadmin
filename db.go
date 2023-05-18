@@ -326,8 +326,8 @@ func GetDB() *gorm.DB {
 			Database.Password,
 			Database.Name,
 			Database.Port,
-			tz,
 			Database.SSL,
+			tz,
 		)
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 			Logger: func() logger.Interface {
