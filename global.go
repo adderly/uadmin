@@ -388,13 +388,16 @@ var DAPISignupGroupID = 0
 // DAPISignupActive controls if new signed up users are activate automatically
 var DAPISignupActive = true
 
+// DAPIAllowDuplicatedEmail controls if new signed up users are activate automatically
+var DAPIAllowDuplicatedEmail = true
+
 // DAPISignupAllowRemote controls if new signed up users are can login over the internet
 var DAPISignupAllowRemote = true
 
 // SignupValidationHandler can be used to validate or customize new
 // signed up users. Note that the password in the password field
 // is passed in plain text. Do not plain text passwords anywhere.
-var SignupValidationHandler func(user *User) error
+var SignupValidationHandler func(user *User, r *http.Request) error
 
 // CustomResetPasswordLink is the link sent to the user's email to reset their password
 // the string may include the following place holder:
@@ -445,7 +448,7 @@ var CustomizeJSON func(http.ResponseWriter, *http.Request, interface{}, []byte) 
 var CustomDAPILoginHandler func(*http.Request, *User, map[string]interface{}) map[string]interface{}
 
 // CustomDAPISignupHandler
-var CustomDAPISignupHandler func(*http.Request, *User) error
+var CustomDAPISignupHandler func(*http.Request, *User) (error, map[string]interface{})
 
 // FullMediaURL allows uAdmin to send you full path URL instead on relative
 // path for dAPI read requests
@@ -483,6 +486,10 @@ var PreLoginHandler func(r *http.Request, username string, password string)
 
 // PostHandler is a function that runs after the files are uploaded
 var PostUploadHandler func(filePath string, modelName string, f *F) string
+
+// APIPreAuthHandler is a function that runs before all dAPI auth requests,
+// The commands are login,logout,signup,resetpassword,changepassword,openidlogin,certs
+var APIPreAuthHandler func(w http.ResponseWriter, r *http.Request, command string) (error, map[string]interface{})
 
 // CompressJSON is a variable that allows the user to reduce the size of JSON responses
 var CompressJSON = false

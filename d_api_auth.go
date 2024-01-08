@@ -18,6 +18,23 @@ func dAPIAuthHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	modelKV := r.Context().Value(CKey("modelName")).(DApiModelKeyVal)
 	command := modelKV.CommandName
 
+	if APIPreAuthHandler != nil {
+		e, edata := APIPreAuthHandler(w, r, command)
+		if e != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			// we got data to return
+			if len(edata) > 0 {
+				ReturnJSON(w, r, edata)
+			} else {
+				ReturnJSON(w, r, map[string]interface{}{
+					"status":  "error",
+					"err_msg": e.Error(),
+				})
+			}
+			return
+		}
+	}
+
 	switch command {
 	case "login":
 		dAPILoginHandler(w, r, s)

@@ -46,11 +46,25 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		Admin:        false,
 		RemoteAccess: DAPISignupAllowRemote,
 		UserGroupID:  uint(DAPISignupGroupID),
+		CreatedByAPI: true,
+	}
+
+	if !DAPIAllowDuplicatedEmail {
+		err := user.EmailExists()
+		w.WriteHeader(http.StatusBadRequest)
+		if err != nil {
+			ReturnJSON(w, r, map[string]interface{}{
+				"status":  "error",
+				"err_msg": err.Error(),
+			})
+			return
+		}
+
 	}
 
 	// run custom validation
 	if SignupValidationHandler != nil {
-		err := SignupValidationHandler(&user)
+		err := SignupValidationHandler(&user, r)
 		w.WriteHeader(http.StatusBadRequest)
 		if err != nil {
 			ReturnJSON(w, r, map[string]interface{}{
@@ -66,7 +80,7 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 
 	// Check if the record was not saved, that means the username is taken
 	if user.ID == 0 {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		ReturnJSON(w, r, map[string]interface{}{
 			"status":  "error",
 			"err_msg": "username taken",
@@ -76,7 +90,20 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 
 	if CustomDAPISignupHandler != nil {
 		//TODO: save errors like this
-		CustomDAPISignupHandler(r, &user)
+		e, edata := CustomDAPISignupHandler(r, &user)
+		if e != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			// we got data to return
+			if len(edata) > 0 {
+				ReturnJSON(w, r, edata)
+			} else {
+				ReturnJSON(w, r, map[string]interface{}{
+					"status":  "error",
+					"err_msg": e.Error(),
+				})
+			}
+			return
+		}
 	}
 
 	// if the user is active, then login in

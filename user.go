@@ -1,6 +1,7 @@
 package uadmin
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -28,6 +29,7 @@ type User struct {
 	OTPRequired   bool
 	OTPSeed       string `uadmin:"list_exclude;hidden;read_only;password"`
 	PasswordReset *time.Time
+	CreatedByAPI  bool
 }
 
 // String return string
@@ -240,6 +242,16 @@ func (u User) Validate() (ret map[string]string) {
 		if u.ID > 0 {
 			ret["Username"] = "Username is already Taken."
 		}
+	}
+	return
+}
+
+// Validate user when saving from uadmin
+func (u User) EmailExists() (e error) {
+	var tmp User
+	Get(&tmp, "email=?", strings.ToLower(u.Email))
+	if tmp.ID > 0 {
+		e = errors.New("Email is already Taken.")
 	}
 	return
 }
