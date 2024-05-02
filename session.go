@@ -43,9 +43,12 @@ func (s *Session) Save() {
 	Save(s)
 	s.User = u
 	if CacheSessions {
+		cachedSessionsMutex.Lock()         // Lock the mutex in order to protect from concurrent writes
+		defer cachedSessionsMutex.Unlock() // Ensure the mutex is unlocked when the function exits
 		if s.Active {
 			Preload(s)
 			cachedSessions[s.Key] = *s
+
 		} else {
 			delete(cachedSessions, s.Key)
 		}
@@ -83,6 +86,10 @@ func loadSessions() {
 	if !CacheSessions {
 		return
 	}
+
+	cachedSessionsMutex.Lock()         // Lock the mutex in order to protect from concurrent writes
+	defer cachedSessionsMutex.Unlock() // Ensure the mutex is unlocked when the function exits
+
 	sList := []Session{}
 	Filter(&sList, "`active` = ? AND (expires_on IS NULL OR expires_on > ?)", true, time.Now())
 	cachedSessions = map[string]Session{}

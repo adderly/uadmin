@@ -1176,6 +1176,7 @@ func FilterBuilder(params map[string]interface{}) (query string, args []interfac
 // AdminPage !
 func AdminPage(order string, asc bool, offset int, limit int, a interface{}, query interface{}, args ...interface{}) (err error) {
 	if order != "" {
+		order = strings.ToLower(order)
 		orderby := " desc"
 		if asc {
 			orderby = " asc"

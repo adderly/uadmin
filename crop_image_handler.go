@@ -78,18 +78,39 @@ func cropImageHandler(w http.ResponseWriter, r *http.Request, session *Session) 
 	}
 	defer f.Close()
 
+	err = createImgFile(w, r, fType, f, mySubImage)
+	if err != nil {
+		return
+	}
+
+	rawFile, err := os.Create(img)
+	if err != nil {
+		ReturnJSON(w, r, map[string]string{"status": "error", "err_msg": "Unable to create raw image. Check logs for details"})
+		return
+	}
+	defer rawFile.Close()
+
+	err = createImgFile(w, r, fType, rawFile, mySubImage)
+	if err != nil {
+		return
+	}
+
+	ReturnJSON(w, r, map[string]string{"status": "okkkkkk"})
+}
+
+func createImgFile(w http.ResponseWriter, r *http.Request, fType []string, f *os.File, mySubImage image.Image) (err error) {
 	if strings.ToLower(fType[len(fType)-1]) == cJPG || strings.ToLower(fType[len(fType)-1]) == cJPEG {
 		err = jpeg.Encode(f, mySubImage, nil)
 		if err != nil {
 			ReturnJSON(w, r, map[string]string{"status": "error", "err_msg": "Unable to encode JPEG image. Check logs for details"})
-			return
+			return err
 		}
 	}
 	if strings.ToLower(fType[len(fType)-1]) == cPNG {
 		err = png.Encode(f, mySubImage)
 		if err != nil {
 			ReturnJSON(w, r, map[string]string{"status": "error", "err_msg": "Unable to encode PNG image. Check logs for details"})
-			return
+			return err
 		}
 	}
 
@@ -98,8 +119,9 @@ func cropImageHandler(w http.ResponseWriter, r *http.Request, session *Session) 
 		err = gif.Encode(f, mySubImage, &o)
 		if err != nil {
 			ReturnJSON(w, r, map[string]string{"status": "error", "err_msg": "Unable to encode GIF image. Check logs for details"})
-			return
+			return err
 		}
 	}
-	ReturnJSON(w, r, map[string]string{"status": "ok"})
+
+	return nil
 }

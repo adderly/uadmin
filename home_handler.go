@@ -26,6 +26,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request, session *Session) {
 	c.Logo = Logo
 	c.FavIcon = FavIcon
 
+	if DefaultModelLoad != nil {
+		modelName := getModelName(DefaultModelLoad)
+		http.Redirect(w, r, c.RootURL+"/"+modelName, http.StatusSeeOther)
+		return
+	}
+
 	c.Menu = session.User.GetDashboardMenu()
 	for i := range c.Menu {
 		c.Menu[i].MenuName = Translate(c.Menu[i].MenuName, c.Language.Code, true)

@@ -14,7 +14,7 @@ import (
 
 // RenderHTML creates a new template and applies a parsed template to the specified
 // data object. For function, Tf is available by default and if you want to add functions
-//to your template, just add them to funcs which will add them to the template with their
+// to your template, just add them to funcs which will add them to the template with their
 // original function names. If you added anonymous functions, they will be available in your
 // templates as func1, func2 ...etc.
 func RenderHTML(w http.ResponseWriter, r *http.Request, path string, data interface{}, funcs ...interface{}) {
@@ -27,6 +27,7 @@ func RenderHTML(w http.ResponseWriter, r *http.Request, path string, data interf
 		"CSRF": func() string {
 			return getSession(r)
 		},
+		"Timestamp": makeTimestamp,
 	}
 
 	for i := range funcs {
@@ -75,4 +76,9 @@ func RenderHTML(w http.ResponseWriter, r *http.Request, path string, data interf
 		}
 		Trail(ERROR, "Unable to render html template file (%s). %s", path, err)
 	}
+}
+
+// allow templates generate unique string per rendering
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
