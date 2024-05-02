@@ -51,8 +51,8 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 
 	if !DAPIAllowDuplicatedEmail {
 		err := user.EmailExists()
-		w.WriteHeader(http.StatusBadRequest)
 		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			ReturnJSON(w, r, map[string]interface{}{
 				"status":  "error",
 				"err_msg": err.Error(),
@@ -65,8 +65,8 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	// run custom validation
 	if SignupValidationHandler != nil {
 		err := SignupValidationHandler(&user, r)
-		w.WriteHeader(http.StatusBadRequest)
 		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
 			ReturnJSON(w, r, map[string]interface{}{
 				"status":  "error",
 				"err_msg": err.Error(),
