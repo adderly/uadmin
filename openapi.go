@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/uadmin/uadmin/openapi"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/openapi"
 )
 
 // CustomOpenAPI is a handler to be called to customize OpenAPI schema

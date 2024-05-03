@@ -1,6 +1,6 @@
-module github.com/uadmin/uadmin
+module github.com/rkj-tech/uadmin-with-postgres-ssl-options
 
-go 1.17
+go 1.19
 
 require (
 	github.com/jinzhu/inflection v1.0.0

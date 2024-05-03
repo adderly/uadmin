@@ -18,7 +18,7 @@ services:
 before_install:
   - echo "USE mysql;\nUPDATE user SET password=PASSWORD('rootpassword') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 
-go_import_path: github.com/uadmin/uadmin
+go_import_path: github.com/rkj-tech/uadmin-with-postgres-ssl-options
 
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/uadmin/uadmin/helper"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/helper"
 )
 
 // GetListSchema returns a schema for list view

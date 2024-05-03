@@ -25,10 +25,25 @@ import (
 	"time"
 
 	// Enable SQLLite
-	"github.com/uadmin/uadmin/colors"
+	"github.com/rkj-tech/uadmin-with-postgres-ssl-options/colors"
 	"gorm.io/driver/sqlite"
 
 	"github.com/thlib/go-timezone-local/tzlocal"
+)
+
+const (
+	//  No SSL
+	Disable SSL = "disable"
+	// Try SSL, if not available continue with no SSL
+	Allow SSL = "allow"
+	// Try SSL first, if not available continue with no SSL
+	Prefer SSL = "prefer"
+	// Only SSL. Refuse the connection if SSL cannot be established
+	Require SSL = "require"
+	// Only SSL, and verify that the server certificate is issued by a trusted certificate authority (CA)
+	VerifyCa SSL = "verify-ca"
+	// Only SSL, verify that the server certificate is issued by a trusted CA and that the server host name matches that in the certificate
+	VerfifyFull SSL = "verify-full"
 )
 
 var db *gorm.DB
@@ -71,7 +86,10 @@ type DBSettings struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Timezone string `json:"timezone"`
+	SSL      SSL    `json:"sslMode"`
 }
+
+type SSL string
 
 type AutoMigrater interface {
 	AutoMigrate() bool
@@ -292,16 +310,23 @@ func GetDB() *gorm.DB {
 		if Database.User == "" {
 			Database.User = "postgres"
 		}
+
 		tz, _ := tzlocal.RuntimeTZ()
 		if Database.Timezone != "" {
 			tz = Database.Timezone
 		}
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=%s",
+
+		if Database.SSL == "" {
+			Database.SSL = Disable
+		}
+
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s",
 			Database.Host,
 			Database.User,
 			Database.Password,
 			Database.Name,
 			Database.Port,
+			Database.SSL,
 			tz,
 		)
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
