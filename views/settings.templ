@@ -1,0 +1,117 @@
+package views
+
+templ AdminSettingsHeader() {
+      <head>
+    <title>{{.SiteName}} - {{Tf "uadmin/system" .Language.Code "Settings"}}
+    </title>
+    <link rel="shortcut icon" href="{{.FavIcon}}"/>
+
+    <link rel="stylesheet" href="/static/uadmin/assets/bootstrap/3.3.7/css/bootstrap.css" >
+    <link rel="stylesheet" href="/static/uadmin/assets/fa/css/all.min.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/bootstrap/3.3.7/css/bootstrap-theme.css" >
+    <link rel="stylesheet" href="/static/uadmin/assets/datepicker/css/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/admin/main.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/css/hover.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/css/form.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/cropper/cropper.min.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/select2/css/select2.min.css">
+    <link rel="stylesheet" href="/static/uadmin/assets/highlight.js/styles/default.css">
+    <style type="text/css" media="all">
+      .hide-text {
+        color: rgba(0,0,0,0) !important;
+      }
+
+       
+      td.hljs-ln-code {
+				white-space: pre-wrap;
+      }
+      .list-group-item{
+          border-radius:0px !important;
+          text-align: center;
+      }
+      .main .list-group-item{
+          font-weight: bold;
+      }
+      .dark-card .list-group-item{
+          border-radius:0px !important;
+          background:#eee;
+          color:#555;
+          font-size:12px;
+      }
+      .dark-card .list-group-item.active{
+          background:#ddd;
+          color:#333;
+          border:1px solid #ddd;
+          font-weight: bold;
+      }
+      .full-height{
+          background: #fefefe;
+      }
+      .full-height.dark{
+          background: #eee;
+          border-right:1px solid #ddd;
+      }
+      .list-group-item.active:after{
+            content:"";
+            position:absolute;
+            height:0;
+            width:0;
+            left:100%;
+            top:0;
+            border:20px solid transparent;
+            border-left: 20px solid #ddd;
+            z-index:99999;
+    }
+    .main .list-group-item.active:after{
+        content:"";
+        position:absolute;
+        height:0;
+        width:0;
+        left:100%;
+        top:0;
+        border:20px solid transparent;
+        border-left: 20px solid #286090;
+        z-index:99999;
+    }
+    .main{
+        z-index:24 !important;
+    }
+    @media only screen and (max-width: 600px) {
+        .main .list-group-item.active:after{
+            content:"";
+            position:absolute;
+            height:0;
+            width:0;
+            left:100%;
+            top:0;
+            border:none;
+            border-left: none;
+            z-index:99999;
+        }
+        .list-group-item.active:after{
+            content:"";
+            position:absolute;
+            height:0;
+            width:0;
+            left:100%;
+            top:0;
+            border:none;
+            border-left: none;
+            z-index:99999;
+        }
+    }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  </head>
+}
+
+
+templ AdminSettingsScripts() {
+    
+}
+
+templ AdminSettings() {
+
+
+}
+
