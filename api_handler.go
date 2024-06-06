@@ -1,6 +1,7 @@
 package uadmin
 
 import (
+	"github.com/uadmin/uadmin/internal/captcha"
 	"net/http"
 	"strings"
 )
@@ -49,6 +50,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(Path, "/get_fields") {
 		GetFieldsAPI(w, r, session)
+		return
+	}
+	if strings.HasPrefix(Path, "/captcha") {
+		captcha.CaptchaHandler(w, r)
 		return
 	}
 }
