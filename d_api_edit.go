@@ -261,7 +261,7 @@ func getEditMap(params map[string]string, schema *ModelSchema, model *reflect.Va
 			continue
 		}
 
-		var f *F
+		var f *FieldDefinition
 		var isPtr = false
 		for i := range schema.Fields {
 			if k == schema.Fields[i].ColumnName || ((k) == schema.Fields[i].ColumnName+"_id" && schema.Fields[i].Type == cFK) {

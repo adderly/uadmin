@@ -22,7 +22,7 @@ type GetImageSizer interface {
 	GetImageSize() (int, int)
 }
 
-func processUpload(r *http.Request, f *F, modelName string, session *Session, s *ModelSchema) (val string) {
+func processUpload(r *http.Request, f *FieldDefinition, modelName string, session *Session, s *ModelSchema) (val string) {
 	base64Format := false
 	// Get file description from http request
 	httpFile, handler, err := r.FormFile(f.Name)

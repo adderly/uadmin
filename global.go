@@ -488,7 +488,7 @@ var APIPostQueryDeleteHandler func(http.ResponseWriter, *http.Request, map[strin
 var PreLoginHandler func(r *http.Request, username string, password string)
 
 // PostHandler is a function that runs after the files are uploaded
-var PostUploadHandler func(filePath string, modelName string, f *F) string
+var PostUploadHandler func(filePath string, modelName string, f *FieldDefinition) string
 
 // APIPreAuthHandler is a function that runs before all dAPI auth requests,
 // The commands are login,logout,signup,resetpassword,changepassword,openidlogin,certs

@@ -19,7 +19,7 @@ type ModelSchema struct {
 	ModelID       uint
 	Inlines       []*ModelSchema
 	InlinesData   []listData
-	Fields        []F
+	Fields        []FieldDefinition
 	IncludeFormJS []string
 	IncludeListJS []string
 	FormModifier  func(*ModelSchema, interface{}, *User)            `json:"-"`
@@ -30,18 +30,18 @@ type ModelSchema struct {
 
 // FieldByName returns a field from a ModelSchema by name or nil if
 // it doesn't exist
-func (s ModelSchema) FieldByName(a string) *F {
+func (s ModelSchema) FieldByName(a string) *FieldDefinition {
 	for i := range s.Fields {
 		if strings.EqualFold(s.Fields[i].Name, a) {
 			return &s.Fields[i]
 		}
 	}
-	return &F{}
+	return &FieldDefinition{}
 }
 
 // FieldByName returns a field from a ModelSchema by name or nil if
 // it doesn't exist
-func (s ModelSchema) FieldByColumnName(a string) *F {
+func (s ModelSchema) FieldByColumnName(a string) *FieldDefinition {
 	for i := range s.Fields {
 		if strings.EqualFold(s.Fields[i].ColumnName, a) {
 			return &s.Fields[i]
@@ -78,7 +78,7 @@ func (s ModelSchema) MarshalJSON() ([]byte, error) {
 		ModelID       uint
 		Inlines       []*ModelSchema
 		InlinesData   []listData
-		Fields        []F
+		Fields        []FieldDefinition
 		IncludeFormJS []string
 		IncludeListJS []string
 		FormModifier  *string
@@ -115,8 +115,8 @@ func (s ModelSchema) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// F is a field
-type F struct {
+// FieldDefinition is a field
+type FieldDefinition struct {
 	Name              string
 	DisplayName       string
 	ColumnName        string
@@ -160,8 +160,8 @@ type F struct {
 	Deprecated        bool
 }
 
-// MarshalJSON customizes F json export
-func (f F) MarshalJSON() ([]byte, error) {
+// MarshalJSON customizes FieldDefinition json export
+func (f FieldDefinition) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name              string
 		DisplayName       string

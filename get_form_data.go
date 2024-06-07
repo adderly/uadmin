@@ -15,7 +15,7 @@ import (
 func getFormData(a interface{}, r *http.Request, session *Session, s *ModelSchema, user *User) {
 	// This holds the formatted value of the field
 	var value interface{}
-	var f *F
+	var f *FieldDefinition
 	var err error
 
 	// Get the type of model
@@ -34,7 +34,7 @@ func getFormData(a interface{}, r *http.Request, session *Session, s *ModelSchem
 		fieldValue := modelValue.Field(index)
 
 		// Get the field from schema
-		f = &F{}
+		f = &FieldDefinition{}
 		fName := t.Field(index).Name
 		if t.Field(index).Anonymous {
 			fName = "ID"

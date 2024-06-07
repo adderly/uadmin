@@ -43,7 +43,7 @@ func GetModelSchema(a interface{}) (s ModelSchema, ok bool) {
 	}()
 
 	// Analyze the fields of the model and add them to the fields list
-	s.Fields = []F{}
+	s.Fields = []FieldDefinition{}
 
 	// Add inlines to schema
 	// Make a list of schema inline
@@ -78,7 +78,7 @@ func GetModelSchema(a interface{}) (s ModelSchema, ok bool) {
 		}
 
 		// Initialize the field
-		f := F{
+		f := FieldDefinition{
 			Translations: []translation{},
 		}
 
@@ -397,7 +397,7 @@ func GetModelSchema(a interface{}) (s ModelSchema, ok bool) {
 			if strings.ToLower(string(t.Method(index).Name[0])) == string(t.Method(index).Name[0]) {
 				continue
 			}
-			f := F{
+			f := FieldDefinition{
 				Translations: []translation{},
 			}
 			f.Name = t.Method(index).Name

@@ -59,7 +59,7 @@ func (t *UAdminTests) TestSyncModelTranslation() {
 	}
 
 	s := Schema["testmodelb"]
-	s.Fields = append(s.Fields, F{
+	s.Fields = append(s.Fields, FieldDefinition{
 		Name:        "TestField",
 		DisplayName: "Test Field",
 		Help:        "Help for test field",

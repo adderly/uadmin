@@ -17,7 +17,7 @@ func (t *UAdminTests) TestGetSchema() {
 		DisplayName: "Test Model A",
 		Inlines:     []*ModelSchema{},
 		InlinesData: []listData{},
-		Fields: []F{
+		Fields: []FieldDefinition{
 			{
 				Name:              "ID",
 				DisplayName:       "ID",
@@ -93,7 +93,7 @@ func (t *UAdminTests) TestGetSchema() {
 		DisplayName: "Test Model B",
 		Inlines:     []*ModelSchema{},
 		InlinesData: []listData{},
-		Fields: []F{
+		Fields: []FieldDefinition{
 			// Model
 			{
 				Name:              "ID",
@@ -893,125 +893,125 @@ func compareSchema(modelName string, got, expected ModelSchema, t *UAdminTests) 
 	}
 	for i := range got.Fields {
 		if got.Fields[i].Type != expected.Fields[i].Type {
-			t.Errorf("getSchema F.Type: (%s) expected (%s) in %s.%s", got.Fields[i].Type, expected.Fields[i].Type, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Type: (%s) expected (%s) in %s.%s", got.Fields[i].Type, expected.Fields[i].Type, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Name != expected.Fields[i].Name {
-			t.Errorf("getSchema F.Name: (%s) expected (%s) in %s.%s", got.Fields[i].Name, expected.Fields[i].Name, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Name: (%s) expected (%s) in %s.%s", got.Fields[i].Name, expected.Fields[i].Name, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].DisplayName != expected.Fields[i].DisplayName {
-			t.Errorf("getSchema F.DisplayName: (%s) expected (%s) in %s.%s", got.Fields[i].DisplayName, expected.Fields[i].DisplayName, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.DisplayName: (%s) expected (%s) in %s.%s", got.Fields[i].DisplayName, expected.Fields[i].DisplayName, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].TypeName != expected.Fields[i].TypeName {
-			t.Errorf("getSchema F.TypeName: (%s) expected (%s) in %s.%s", got.Fields[i].TypeName, expected.Fields[i].TypeName, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.TypeName: (%s) expected (%s) in %s.%s", got.Fields[i].TypeName, expected.Fields[i].TypeName, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Value != expected.Fields[i].Value {
-			t.Errorf("getSchema F.Value: (%#v) expected (%#v) in %s.%s", got.Fields[i].Value, expected.Fields[i].Value, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Value: (%#v) expected (%#v) in %s.%s", got.Fields[i].Value, expected.Fields[i].Value, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Help != expected.Fields[i].Help {
-			t.Errorf("getSchema F.Help: (%s) expected (%s) in %s.%s", got.Fields[i].Help, expected.Fields[i].Help, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Help: (%s) expected (%s) in %s.%s", got.Fields[i].Help, expected.Fields[i].Help, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Max != expected.Fields[i].Max {
-			t.Errorf("getSchema F.Max: (%#v) expected (%#v) in %s.%s", got.Fields[i].Max, expected.Fields[i].Max, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Max: (%#v) expected (%#v) in %s.%s", got.Fields[i].Max, expected.Fields[i].Max, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Min != expected.Fields[i].Min {
-			t.Errorf("getSchema F.Min: (%#v) expected (%#v) in %s.%s", got.Fields[i].Min, expected.Fields[i].Min, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Min: (%#v) expected (%#v) in %s.%s", got.Fields[i].Min, expected.Fields[i].Min, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Format != expected.Fields[i].Format {
-			t.Errorf("getSchema F.Format: (%s) expected (%s) in %s.%s", got.Fields[i].Format, expected.Fields[i].Format, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Format: (%s) expected (%s) in %s.%s", got.Fields[i].Format, expected.Fields[i].Format, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].DefaultValue != expected.Fields[i].DefaultValue {
-			t.Errorf("getSchema F.DefaultValue: (%s) expected (%s) in %s.%s", got.Fields[i].DefaultValue, expected.Fields[i].DefaultValue, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.DefaultValue: (%s) expected (%s) in %s.%s", got.Fields[i].DefaultValue, expected.Fields[i].DefaultValue, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Required != expected.Fields[i].Required {
-			t.Errorf("getSchema F.Required: (%v) expected (%v) in %s.%s", got.Fields[i].Required, expected.Fields[i].Required, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Required: (%v) expected (%v) in %s.%s", got.Fields[i].Required, expected.Fields[i].Required, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Pattern != expected.Fields[i].Pattern {
-			t.Errorf("getSchema F.Pattern: (%s) expected (%s) in %s.%s", got.Fields[i].Pattern, expected.Fields[i].Pattern, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Pattern: (%s) expected (%s) in %s.%s", got.Fields[i].Pattern, expected.Fields[i].Pattern, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].PatternMsg != expected.Fields[i].PatternMsg {
-			t.Errorf("getSchema F.PatternMsg: (%s) expected (%s) in %s.%s", got.Fields[i].PatternMsg, expected.Fields[i].PatternMsg, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.PatternMsg: (%s) expected (%s) in %s.%s", got.Fields[i].PatternMsg, expected.Fields[i].PatternMsg, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Hidden != expected.Fields[i].Hidden {
-			t.Errorf("getSchema F.Hidden: (%v) expected (%v) in %s.%s", got.Fields[i].Hidden, expected.Fields[i].Hidden, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Hidden: (%v) expected (%v) in %s.%s", got.Fields[i].Hidden, expected.Fields[i].Hidden, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].ReadOnly != expected.Fields[i].ReadOnly {
-			t.Errorf("getSchema F.ReadOnly: (%s) expected (%s) in %s.%s", got.Fields[i].ReadOnly, expected.Fields[i].ReadOnly, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.ReadOnly: (%s) expected (%s) in %s.%s", got.Fields[i].ReadOnly, expected.Fields[i].ReadOnly, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Searchable != expected.Fields[i].Searchable {
-			t.Errorf("getSchema F.Searchable: (%v) expected (%v) in %s.%s", got.Fields[i].Searchable, expected.Fields[i].Searchable, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Searchable: (%v) expected (%v) in %s.%s", got.Fields[i].Searchable, expected.Fields[i].Searchable, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Filter != expected.Fields[i].Filter {
-			t.Errorf("getSchema F.Filter: (%v) expected (%v) in %s.%s", got.Fields[i].Filter, expected.Fields[i].Filter, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Filter: (%v) expected (%v) in %s.%s", got.Fields[i].Filter, expected.Fields[i].Filter, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].ListDisplay != expected.Fields[i].ListDisplay {
-			t.Errorf("getSchema F.ListDisplay: (%v) expected (%v) in %s.%s", got.Fields[i].ListDisplay, expected.Fields[i].ListDisplay, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.ListDisplay: (%v) expected (%v) in %s.%s", got.Fields[i].ListDisplay, expected.Fields[i].ListDisplay, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].FormDisplay != expected.Fields[i].FormDisplay {
-			t.Errorf("getSchema F.FormDisplay: (%v) expected (%v) in %s.%s", got.Fields[i].FormDisplay, expected.Fields[i].FormDisplay, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.FormDisplay: (%v) expected (%v) in %s.%s", got.Fields[i].FormDisplay, expected.Fields[i].FormDisplay, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].CategoricalFilter != expected.Fields[i].CategoricalFilter {
-			t.Errorf("getSchema F.CategoricalFilter: (%v) expected (%v) in %s.%s", got.Fields[i].CategoricalFilter, expected.Fields[i].CategoricalFilter, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.CategoricalFilter: (%v) expected (%v) in %s.%s", got.Fields[i].CategoricalFilter, expected.Fields[i].CategoricalFilter, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Translations != nil && expected.Fields[i].Translations != nil {
 			if len(got.Fields[i].Translations) == len(expected.Fields[i].Translations) {
 				for index := range expected.Fields[i].Translations {
 					if got.Fields[i].Translations[index] != expected.Fields[i].Translations[index] {
-						t.Errorf("getSchema F.Translations: (%#v) expected (%#v) in %s.%s[%d]", got.Fields[i].Translations[index], expected.Fields[i].Translations[index], modelName, expected.Fields[i].Name, index)
+						t.Errorf("getSchema FieldDefinition.Translations: (%#v) expected (%#v) in %s.%s[%d]", got.Fields[i].Translations[index], expected.Fields[i].Translations[index], modelName, expected.Fields[i].Name, index)
 					}
 				}
 			} else {
-				t.Errorf("getSchema F.Translations: (%#v) expected (%#v) in %s.%s", got.Fields[i].Translations, expected.Fields[i].Translations, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.Translations: (%#v) expected (%#v) in %s.%s", got.Fields[i].Translations, expected.Fields[i].Translations, modelName, expected.Fields[i].Name)
 			}
 		} else {
 			if (got.Fields[i].Translations != nil) != (expected.Fields[i].Translations != nil) {
-				t.Errorf("getSchema F.Translations: (%#v) expected (%#v) in %s.%s", got.Fields[i].Translations, expected.Fields[i].Translations, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.Translations: (%#v) expected (%#v) in %s.%s", got.Fields[i].Translations, expected.Fields[i].Translations, modelName, expected.Fields[i].Name)
 			}
 		}
 		if got.Fields[i].Choices != nil && expected.Fields[i].Choices != nil {
 			if len(got.Fields[i].Choices) == len(expected.Fields[i].Choices) {
 				for index := range expected.Fields[i].Choices {
 					if got.Fields[i].Choices[index] != expected.Fields[i].Choices[index] {
-						t.Errorf("getSchema F.Choices: (%#v) expected (%#v) in %s.%s[%d]", got.Fields[i].Choices[index], expected.Fields[i].Choices[index], modelName, expected.Fields[i].Name, index)
+						t.Errorf("getSchema FieldDefinition.Choices: (%#v) expected (%#v) in %s.%s[%d]", got.Fields[i].Choices[index], expected.Fields[i].Choices[index], modelName, expected.Fields[i].Name, index)
 					}
 				}
 			} else {
 
-				t.Errorf("getSchema F.Choices: (%#v) expected (%#v) in %s.%s", got.Fields[i].Choices, expected.Fields[i].Choices, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.Choices: (%#v) expected (%#v) in %s.%s", got.Fields[i].Choices, expected.Fields[i].Choices, modelName, expected.Fields[i].Name)
 			}
 		} else {
 			if (got.Fields[i].Choices != nil) != (expected.Fields[i].Choices != nil) {
-				t.Errorf("getSchema F.Choices: (%#v) expected (%#v) in %s.%s", got.Fields[i].Choices, expected.Fields[i].Choices, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.Choices: (%#v) expected (%#v) in %s.%s", got.Fields[i].Choices, expected.Fields[i].Choices, modelName, expected.Fields[i].Name)
 			}
 		}
 		if got.Fields[i].IsMethod != expected.Fields[i].IsMethod {
-			t.Errorf("getSchema F.IsMethod: (%v) expected (%v) in %s.%s", got.Fields[i].IsMethod, expected.Fields[i].IsMethod, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.IsMethod: (%v) expected (%v) in %s.%s", got.Fields[i].IsMethod, expected.Fields[i].IsMethod, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].ErrMsg != expected.Fields[i].ErrMsg {
-			t.Errorf("getSchema F.ErrMsg: (%s) expected (%s) in %s.%s", got.Fields[i].ErrMsg, expected.Fields[i].ErrMsg, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.ErrMsg: (%s) expected (%s) in %s.%s", got.Fields[i].ErrMsg, expected.Fields[i].ErrMsg, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].ProgressBar != nil && expected.Fields[i].ProgressBar != nil {
 			if len(got.Fields[i].ProgressBar) == len(expected.Fields[i].ProgressBar) {
 				for index := range expected.Fields[i].ProgressBar {
 					if got.Fields[i].ProgressBar[index] != expected.Fields[i].ProgressBar[index] {
-						t.Errorf("getSchema F.ProgressBar: (%#v) expected (%#v) in %s.%s[%f]", got.Fields[i].ProgressBar[index], expected.Fields[i].ProgressBar[index], modelName, expected.Fields[i].Name, index)
+						t.Errorf("getSchema FieldDefinition.ProgressBar: (%#v) expected (%#v) in %s.%s[%f]", got.Fields[i].ProgressBar[index], expected.Fields[i].ProgressBar[index], modelName, expected.Fields[i].Name, index)
 					}
 				}
 			} else {
-				t.Errorf("getSchema F.ProgressBar: (%#v) expected (%#v) in %s.%s", got.Fields[i].ProgressBar, expected.Fields[i].ProgressBar, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.ProgressBar: (%#v) expected (%#v) in %s.%s", got.Fields[i].ProgressBar, expected.Fields[i].ProgressBar, modelName, expected.Fields[i].Name)
 			}
 		} else {
 			if (got.Fields[i].ProgressBar != nil) != (expected.Fields[i].ProgressBar != nil) {
-				t.Errorf("getSchema F.ProgressBar: (%#v) expected (%#v) in %s.%s", got.Fields[i].ProgressBar, expected.Fields[i].ProgressBar, modelName, expected.Fields[i].Name)
+				t.Errorf("getSchema FieldDefinition.ProgressBar: (%#v) expected (%#v) in %s.%s", got.Fields[i].ProgressBar, expected.Fields[i].ProgressBar, modelName, expected.Fields[i].Name)
 			}
 		}
 		if got.Fields[i].LimitChoicesTo != nil && expected.Fields[i].LimitChoicesTo != nil {
-			t.Errorf("getSchema F.LimitChoicesTo: (%v) expected (%v) in %s.%s", got.Fields[i].LimitChoicesTo == nil, expected.Fields[i].LimitChoicesTo == nil, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.LimitChoicesTo: (%v) expected (%v) in %s.%s", got.Fields[i].LimitChoicesTo == nil, expected.Fields[i].LimitChoicesTo == nil, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].UploadTo != expected.Fields[i].UploadTo {
-			t.Errorf("getSchema F.UploadTo: (%s) expected (%s) in %s.%s", got.Fields[i].UploadTo, expected.Fields[i].UploadTo, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.UploadTo: (%s) expected (%s) in %s.%s", got.Fields[i].UploadTo, expected.Fields[i].UploadTo, modelName, expected.Fields[i].Name)
 		}
 		if got.Fields[i].Encrypt != expected.Fields[i].Encrypt {
-			t.Errorf("getSchema F.Encrypt: (%v) expected (%v) in %s.%s", got.Fields[i].Encrypt, expected.Fields[i].Encrypt, modelName, expected.Fields[i].Name)
+			t.Errorf("getSchema FieldDefinition.Encrypt: (%v) expected (%v) in %s.%s", got.Fields[i].Encrypt, expected.Fields[i].Encrypt, modelName, expected.Fields[i].Name)
 		}
 	}
 }
