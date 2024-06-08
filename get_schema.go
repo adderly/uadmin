@@ -168,6 +168,9 @@ func GetModelSchema(a interface{}) (s ModelSchema, ok bool) {
 		typeName := strings.Split(t.Field(index).Type.String(), ".")
 		f.TypeName = typeName[len(typeName)-1]
 
+		//The model where this field is located
+		f.ModelName = s.ModelName
+
 		// Process the field's data type
 		if t.Field(index).Type == SType {
 			f.Type = "string"

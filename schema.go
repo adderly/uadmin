@@ -115,13 +115,17 @@ func (s ModelSchema) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// FieldDefinition is a field
+// FieldDefinition is a field, where the model tags are stored
 type FieldDefinition struct {
-	Name              string
-	DisplayName       string
-	ColumnName        string
-	Type              string
-	TypeName          string
+	Name        string
+	DisplayName string
+	ColumnName  string
+	Type        string
+	TypeName    string
+	//ModelName = field owner
+	// maybe it's a good idea to be able to make transactions
+	//with only the field definition and use the Schema only if needed
+	ModelName         string
 	Value             interface{}
 	Help              string
 	Max               interface{}
@@ -144,6 +148,7 @@ type FieldDefinition struct {
 	ErrMsg            string
 	ProgressBar       map[float64]string                `json:"-"`
 	LimitChoicesTo    func(interface{}, *User) []Choice `json:"-"`
+	Upload            string                            //TODO:
 	UploadTo          string
 	Encrypt           bool
 	Approval          bool

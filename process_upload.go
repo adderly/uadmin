@@ -2,12 +2,14 @@ package uadmin
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
@@ -256,8 +258,311 @@ func processUpload(r *http.Request, f *FieldDefinition, modelName string, sessio
 	}
 
 	if PostUploadHandler != nil {
-		val = PostUploadHandler(val, modelName, f)
+		val, err = PostUploadHandler(val, modelName, f)
 	}
 
 	return val
+}
+
+// UploadConf Simple way to pass information for the uploads, not relying solely on Schema
+type UploadConf struct {
+	FieldDef *FieldDefinition
+	//A way to pass a sizer interface for custom resizing.
+	ImageSizer GetImageSizer
+	// Enable model resizer, the ImageSizer from conf have precedence over
+	// the model one; if enabled. defaults to false
+	ImageSizeFromModel bool
+	//
+	Overwrite bool
+	//The folder name for the files to be stored in
+	FolderName string
+	// TODO: The filename will be a hash instead of the filename.ext -> 87sjs9s3dyj.ext
+	HashedName bool
+}
+
+func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (val string, errRs error) {
+
+	// Get file description from http request
+	var (
+		httpFile multipart.File
+		handler  *multipart.FileHeader
+		err      error
+	)
+
+	if session.ThroughAPI {
+		httpFile, handler, err = r.FormFile(uploadConf.FieldDef.ColumnName)
+	} else {
+		httpFile, handler, err = r.FormFile(uploadConf.FieldDef.Name)
+	}
+
+	isBase64 := false
+
+	if err != nil {
+		if r.Form.Get(uploadConf.FieldDef.Name+"-raw") != "" {
+			isBase64 = true
+		} else {
+			return "", errors.New("field name not found in form")
+		}
+	} else {
+		defer httpFile.Close()
+	}
+
+	// return "", s if there is no file uploaded
+	if !isBase64 {
+		if handler.Filename == "" {
+			return "", errors.New("no file is uploaded")
+		}
+	}
+
+	if isBase64 {
+		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		filesize := float64(len(getF)-strings.Index(getF, "://")) * 0.75
+		if int64(filesize) > MaxUploadFileSize {
+			uploadConf.FieldDef.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", MaxUploadFileSize/1024/1024)
+			return "", errors.New(uploadConf.FieldDef.ErrMsg)
+		}
+	} else {
+		if handler.Size > MaxUploadFileSize {
+			uploadConf.FieldDef.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", MaxUploadFileSize/1024/1024)
+			return "", errors.New(uploadConf.FieldDef.ErrMsg)
+		}
+	}
+
+	// Get the upload to path and create it if it doesn't exist
+	uploadTo := "/media/" + uploadConf.FieldDef.Type + "s/"
+	if uploadConf.FieldDef.UploadTo != "" {
+		uploadTo = uploadConf.FieldDef.UploadTo
+	}
+	if _, err = os.Stat("." + uploadTo); os.IsNotExist(err) {
+		err = os.MkdirAll("."+uploadTo, 0755)
+		if err != nil {
+			errorStr := fmt.Sprintf("processForm.MkdirAll. %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+	}
+
+	// Generate local file name and create it
+	var fName string
+	var pathName string
+	var fParts []string
+	if isBase64 {
+		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		fName = getF[0:strings.Index(getF, "://")]
+		fParts = strings.Split(fName, ".")
+	} else {
+		fName = handler.Filename
+		fName = strings.Replace(fName, "/", "_", -1)
+		fName = strings.Replace(fName, "\\", "_", -1)
+		fName = strings.Replace(fName, "..", "_", -1)
+		fParts = strings.Split(fName, ".")
+	}
+	fExt := strings.ToLower(fParts[len(fParts)-1])
+
+	//Use the specified folder
+	if len(uploadConf.FolderName) > 0 {
+		pathName = "." + uploadTo + uploadConf.FolderName + "_" + uploadConf.FieldDef.Name + "/"
+	} else {
+		pathName = "." + uploadTo + uploadConf.FieldDef.ModelName + "_" + uploadConf.FieldDef.Name + "_" + GenerateBase64(10) + "/"
+		if uploadConf.FieldDef.Type == cIMAGE && len(fParts) > 1 {
+			fName = strings.TrimSuffix(fName, "."+fExt) + "_raw." + fExt
+		} else if uploadConf.FieldDef.Type == cIMAGE {
+			uploadConf.FieldDef.ErrMsg = "Image file with no extension. Please use png, jpg, jpeg or gif."
+			return "", errors.New(uploadConf.FieldDef.ErrMsg)
+		}
+
+		//Finds a new path location if exists
+		for _, err = os.Stat(pathName + fName); os.IsExist(err); {
+			pathName = "." + uploadTo + uploadConf.FieldDef.ModelName + "_" + uploadConf.FieldDef.Name + "_" + GenerateBase64(10) + "/"
+		}
+
+	}
+
+	// Sanitize the file name
+	fName = pathName + path.Clean(fName)
+
+	err = os.MkdirAll(pathName, 0755)
+	if err != nil {
+		errorStr := fmt.Sprintf("processForm.MkdirAll. unable to create folder for uploaded file. %s", err)
+		Trail(ERROR, errorStr)
+		return "", errors.New(errorStr)
+	}
+
+	fRaw, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE, DefaultMediaPermission)
+	if err != nil {
+		errorStr := fmt.Sprintf("processForm.OpenFile. unable to create file. %s", err)
+		Trail(ERROR, errorStr)
+		return "", errors.New(errorStr)
+	}
+
+	// Copy http file to local
+	if isBase64 {
+		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		data, err := base64.StdEncoding.DecodeString(getF[strings.Index(getF, "://")+3 : len(getF)])
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm error decoding base64. %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+		_, err = fRaw.Write(data)
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm error writing file. %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+	} else {
+		_, err = io.Copy(fRaw, httpFile)
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm error uploading http file. %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+	}
+	fRaw.Close()
+
+	// store the file path to DB
+	if uploadConf.FieldDef.Type == cFILE {
+		val = fmt.Sprint(strings.TrimPrefix(fName, "."))
+	} else {
+		// If case it is an image, process it first
+		fRaw, err = os.Open(fName)
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm.Open %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+
+		// decode jpeg,png,gif into image.Image
+		var img image.Image
+		if fExt == cJPG || fExt == cJPEG {
+			img, err = jpeg.Decode(fRaw)
+		} else if fExt == cPNG {
+			img, err = png.Decode(fRaw)
+		} else if fExt == cGIF {
+			img, err = gif.Decode(fRaw)
+		} else {
+			uploadConf.FieldDef.ErrMsg = "Unknown image file extension. Please use, png, jpg/jpeg or gif"
+			return "", errors.New(uploadConf.FieldDef.ErrMsg)
+		}
+		if err != nil {
+			uploadConf.FieldDef.ErrMsg = "Unknown image format or image corrupted."
+			Trail(WARNING, "ProcessForm.Decode %s", err)
+			return "", errors.New(uploadConf.FieldDef.ErrMsg)
+		}
+
+		// Resize the image to fit max height, max width
+		width := img.Bounds().Dx()
+		height := img.Bounds().Dy()
+
+		sizer := uploadConf.ImageSizer
+
+		if sizer != nil {
+			height, width = sizer.GetImageSize()
+		} else if uploadConf.ImageSizeFromModel {
+			model, _ := NewModel(uploadConf.FieldDef.ModelName, false)
+			sizerModel, _ := model.Interface().(GetImageSizer)
+			sizer = sizerModel
+		}
+
+		// Check if there is a custom image size
+		//TODO: handle MaxImageSize per upload conf
+		if sizer != nil || height > MaxImageHeight {
+			if sizer != nil {
+				height, width = sizer.GetImageSize()
+			} else {
+				Ratio := float64(MaxImageHeight) / float64(height)
+				width = int(float64(width) * Ratio)
+				height = int(float64(height) * Ratio)
+				if width > MaxImageWidth {
+					Ratio = float64(MaxImageWidth) / float64(width)
+					width = int(float64(width) * Ratio)
+					height = int(float64(height) * Ratio)
+				}
+			}
+			img = resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
+		}
+
+		// Store the active file
+		fActiveName := strings.Replace(fName, "_raw", "", -1)
+		fActive, err := os.Create(fActiveName)
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm.Create unable to create file for resized image. %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+		defer fActive.Close()
+
+		fRaw, err = os.OpenFile(fName, os.O_WRONLY, 0644)
+		if err != nil {
+			errorStr := fmt.Sprintf("ProcessForm.Open %s", err)
+			Trail(ERROR, errorStr)
+			return "", errors.New(errorStr)
+		}
+		defer fRaw.Close()
+
+		// write new image to file
+		if fExt == cJPG || fExt == cJPEG {
+			err = jpeg.Encode(fActive, img, nil)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode active jpg. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+
+			err = jpeg.Encode(fRaw, img, nil)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode raw jpg. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+		}
+
+		if fExt == cPNG {
+			err = png.Encode(fActive, img)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode active png. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+
+			err = png.Encode(fRaw, img)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode raw png. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+		}
+
+		if fExt == cGIF {
+			o := gif.Options{}
+			err = gif.Encode(fActive, img, &o)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode active gif. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+
+			err = gif.Encode(fRaw, img, &o)
+			if err != nil {
+				errorStr := fmt.Sprintf("ProcessForm.Encode raw gif. %s", err)
+				Trail(ERROR, errorStr)
+				return "", errors.New(errorStr)
+			}
+		}
+		val = fmt.Sprint(strings.TrimPrefix(fActiveName, "."))
+	}
+
+	// Delete old file if it exists and there not required
+	if !RetainMediaVersions {
+		oldFileName := "." + fmt.Sprint(uploadConf.FieldDef.Value)
+		oldFileParts := strings.Split(oldFileName, "/")
+		os.RemoveAll(strings.Join(oldFileParts[0:len(oldFileParts)-1], "/"))
+	}
+
+	if PostUploadHandler != nil {
+		//TODO: error handling better
+		val, err = PostUploadHandler(val, uploadConf.FieldDef.ModelName, uploadConf.FieldDef)
+	}
+
+	return val, err
 }
