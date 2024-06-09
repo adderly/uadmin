@@ -125,3 +125,43 @@ func DAPIUploadWithField(r *http.Request, fieldDefinition *FieldDefinition, sess
 	}
 	return fileList, nil
 }
+
+func DAPIUploadWithConf(r *http.Request, uploadConf UploadConf, session *Session) (map[string]string, error) {
+	fileList := map[string]string{}
+
+	// Parse the Form
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		r.ParseForm()
+	}
+
+	if r.MultipartForm == nil {
+		return fileList, nil
+	}
+
+	// make a list of files
+	kFileList := []string{}
+	for k := range r.MultipartForm.File {
+		kFileList = append(kFileList, k)
+	}
+
+	for _, kFile := range kFileList {
+		// Process File
+		//TODO: document the lower dash in column names
+		cname := kFile[1:] // remove the _ from the filename _imagefile -> imagefile
+		if !strings.EqualFold(cname, uploadConf.FieldDef.ColumnName) {
+			Trail(WARNING, "dAPIUpload received a file that has no field: %s", kFile)
+			continue
+		}
+
+		r.MultipartForm.File[kFile[1:]] = r.MultipartForm.File[kFile]
+
+		fileName, procErr := ProcessUpload(r, uploadConf, session)
+		if fileName != "" {
+			fileList[uploadConf.FieldDef.ColumnName] = fileName
+		} else {
+			Trail(WARNING, "ProcessUpload failed proccing upload: %s", procErr)
+		}
+	}
+	return fileList, nil
+}
