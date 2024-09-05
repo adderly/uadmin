@@ -261,3 +261,9 @@ func (a ABTest) Reset() {
 	Update(&abtestValue, "clicks", 0, "ab_test_id = ?", a.ID)
 	abTestsMutex.Unlock()
 }
+
+// HideInDashboard indicates that startup register call
+// should hide this model in dashboard menu
+func (ABTest) HideInDashboard() bool {
+	return true
+}

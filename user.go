@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/arbrix/uadmin/helper"
 )
 
 // User !
@@ -87,12 +89,12 @@ func (u *User) Login(pass string, otp string) *Session {
 			s.UserID = u.ID
 			s.LoginTime = time.Now()
 			s.GenerateKey()
-			if CookieTimeout > -1 {
-				ExpiresOn := s.LoginTime.Add(time.Second * time.Duration(CookieTimeout))
-				s.ExpiresOn = &ExpiresOn
-			}
 		}
 		s.LastLogin = time.Now()
+		if CookieTimeout > -1 {
+			ExpiresOn := s.LastLogin.Add(time.Second * time.Duration(CookieTimeout))
+			s.ExpiresOn = &ExpiresOn
+		}
 		if u.OTPRequired {
 			if otp == "" {
 				Trail(INFO, "OTP login for: %s is %s", u.Username, u.GetOTP())
@@ -237,13 +239,47 @@ func (u *User) GetAccess(modelName string) UserPermission {
 // Validate user when saving from uadmin
 func (u User) Validate() (ret map[string]string) {
 	ret = map[string]string{}
+
+	userNameErrMess := u.validateUserName()
+	if userNameErrMess != "" {
+		ret["Username"] = userNameErrMess
+	}
+
+	passErrMess := u.validatePass()
+	if passErrMess != "" {
+		ret["Password"] = passErrMess
+	}
+	return
+}
+
+func (u User) validateUserName() string {
 	if u.ID == 0 {
 		Get(&u, "username=?", strings.ToLower(u.Username))
 		if u.ID > 0 {
-			ret["Username"] = "Username is already Taken."
+			return "Username is already Taken."
 		}
 	}
-	return
+	return ""
+}	
+
+func (u User) validatePass() string {
+	validator := helper.NewPasswordValidator()
+	err := validator.Validate(u.Password)
+	if err != nil {
+		return fmt.Sprintf("invalid password: %s", err)
+	}
+
+	// check if new password same as previous
+	if u.ID != 0 {
+		var prevUser User
+		Get(&prevUser, "id=?", u.ID)
+		compareErr := verifyPassword(prevUser.Password, u.Password)
+		if compareErr == nil {
+			return "sorry, you can't use the same password"
+		}
+	}
+
+	return ""
 }
 
 // Validate user when saving from uadmin

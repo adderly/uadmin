@@ -2,11 +2,15 @@ package uadmin
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	//_ "github.com/jinzhu/gorm/dialects/mssql"
@@ -17,12 +21,6 @@ import (
 
 	// Enable PostgreSQL
 	"gorm.io/driver/postgres"
-
-	"encoding/json"
-
-	"io/ioutil"
-	"net/http"
-	"time"
 
 	// Enable SQLLite
 	"github.com/uadmin/uadmin/colors"
@@ -71,6 +69,7 @@ type DBSettings struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Timezone string `json:"timezone"`
+	SSLMode  string `json:"sslmode"`
 }
 
 type AutoMigrater interface {
@@ -107,7 +106,8 @@ func customMigration(a interface{}) (err error) {
 	t := reflect.TypeOf(a)
 	for i := 0; i < t.NumField(); i++ {
 		// Check if there is any m2m fields
-		if t.Field(i).Type.Kind() == reflect.Slice && t.Field(i).Type.Elem().Kind() == reflect.Struct {
+		if !strings.Contains(t.Field(i).Tag.Get("uadmin"), "disable_m2m") &&
+			t.Field(i).Type.Kind() == reflect.Slice && t.Field(i).Type.Elem().Kind() == reflect.Struct {
 			table1 := strings.ToLower(t.Name())
 			table2 := strings.ToLower(t.Field(i).Type.Elem().Name())
 
@@ -186,6 +186,12 @@ func GetDB() *gorm.DB {
 				Database = &DBSettings{}
 			}
 			Database.Password = v
+		}
+		if v := os.Getenv("UADMIN_DB_SSLMODE"); v != "" {
+			if Database == nil {
+				Database = &DBSettings{}
+			}
+			Database.SSLMode = v
 		}
 	}
 
@@ -296,12 +302,13 @@ func GetDB() *gorm.DB {
 		if Database.Timezone != "" {
 			tz = Database.Timezone
 		}
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=%s",
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=%s",
 			Database.Host,
 			Database.User,
 			Database.Password,
 			Database.Name,
 			Database.Port,
+			Database.SSLMode,
 			tz,
 		)
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -392,11 +399,12 @@ func createDB() error {
 		if Database.Timezone != "" {
 			tz = Database.Timezone
 		}
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=postgres port=%d sslmode=disable TimeZone=%s",
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=postgres port=%d sslmode=%s TimeZone=%s",
 			Database.Host,
 			Database.User,
 			Database.Password,
 			Database.Port,
+			Database.SSLMode,
 			tz,
 		)
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -427,6 +435,11 @@ func createDB() error {
 // ClearDB clears the db object
 func ClearDB() {
 	db = nil
+}
+
+// Set mockDB for testing purpose
+func SetDB(mockDB *gorm.DB) {
+	db = mockDB
 }
 
 // All fetches all object in the database

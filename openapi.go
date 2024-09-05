@@ -151,6 +151,10 @@ func GenerateOpenAPISchema() {
 					return &openapi.SchemaObject{
 						Type: "string",
 					}
+				case cHTML_MULTILINGUAL:
+					return &openapi.SchemaObject{
+						Type: "string",
+					}
 				case cPROGRESSBAR:
 					switch v.Fields[i].TypeName {
 					case "float64":

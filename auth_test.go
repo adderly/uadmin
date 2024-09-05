@@ -4,10 +4,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+const testPassword = "_test_pass_P@55w0rd_Str0ng&C0mplex!2024"
 
 // TestGenerateBase64 is a unit testing function for GenerateBase64() function
 func (t *UAdminTests) TestGenerateBase64() {
@@ -135,7 +138,7 @@ func (t *UAdminTests) TestIsAuthenticated() {
 	u1 := User{}
 	u1.FirstName = "u1"
 	u1.Username = "u1"
-	u1.Password = "u1"
+	u1.Password = "u1"+testPassword
 	u1.Active = false
 	u1.Admin = false
 	u1.RemoteAccess = false
@@ -145,7 +148,7 @@ func (t *UAdminTests) TestIsAuthenticated() {
 	// expired user
 	u2 := User{}
 	u2.Username = "u2"
-	u2.Password = "u2"
+	u2.Password = "u2"+testPassword
 	u2.Active = true
 	u2.Admin = false
 	u2.RemoteAccess = false
@@ -155,7 +158,7 @@ func (t *UAdminTests) TestIsAuthenticated() {
 	// user with expiry in the future
 	u3 := User{}
 	u3.Username = "u3"
-	u3.Password = "u3"
+	u3.Password = "u3"+testPassword
 	u3.Active = true
 	u3.Admin = false
 	u3.RemoteAccess = false
@@ -349,6 +352,27 @@ func (t *UAdminTests) TestGetUserFromRequest() {
 	Delete(s1)
 }
 
+func (t *UAdminTests) TestSetCookieTimeout() {
+	if CookieTimeout != -1 {
+		t.Error("Wrong initial value for CookieTimeout")
+	}
+
+	// set default value
+	SetCookieTimeout()
+	if CookieTimeout != defaultCookieTimeout {
+		t.Errorf("Got wrong CookieTimeout value: %d, The default value is expected: %d", CookieTimeout, defaultCookieTimeout)
+	}
+
+	// set custom value
+	os.Setenv("COOKIE_TIMEOUT_SECONDS", "123")
+	SetCookieTimeout()
+	expected := 123
+	if CookieTimeout != expected {
+		t.Errorf("Got wrong CookieTimeout value: %d, Expected value: %d", CookieTimeout, expected)
+	}
+	os.Unsetenv("COOKIE_TIMEOUT_SECONDS")
+}
+
 // TestLogin is a unit testing function for Login() function
 func (t *UAdminTests) TestLogin() {
 	// Setup
@@ -359,7 +383,7 @@ func (t *UAdminTests) TestLogin() {
 	u1 := User{}
 	u1.FirstName = "u1"
 	u1.Username = "u1"
-	u1.Password = "u1"
+	u1.Password = string([]byte("u1" + testPassword + Salt))
 	u1.Active = false
 	u1.Admin = false
 	u1.RemoteAccess = false
@@ -367,10 +391,11 @@ func (t *UAdminTests) TestLogin() {
 	u1.Save()
 
 	// expired user
+	u2Pass := "u2"+testPassword
 	u2 := User{}
 	u2.FirstName = "u2"
 	u2.Username = "u2"
-	u2.Password = "u2"
+	u2.Password = u2Pass
 	u2.Active = true
 	u2.Admin = false
 	u2.RemoteAccess = false
@@ -378,10 +403,11 @@ func (t *UAdminTests) TestLogin() {
 	u2.Save()
 
 	// user with expiry in the future
+	u3Pass := "u3"+testPassword
 	u3 := User{}
 	u3.FirstName = "u3"
-	u3.Username = "u3"
-	u3.Password = "u3"
+	u3.Username = "u3_test"
+	u3.Password = u3Pass
 	u3.Active = true
 	u3.Admin = false
 	u3.RemoteAccess = false
@@ -389,10 +415,11 @@ func (t *UAdminTests) TestLogin() {
 	u3.Save()
 
 	// user OTP required
+	u4Pass := "u4"+testPassword
 	u4 := User{}
 	u4.FirstName = "u4"
 	u4.Username = "u4"
-	u4.Password = "u4"
+	u4.Password = u4Pass
 	u4.Active = true
 	u4.Admin = false
 	u4.RemoteAccess = false
@@ -404,41 +431,43 @@ func (t *UAdminTests) TestLogin() {
 	Get(&admin, "id=?", 1)
 
 	examples := []struct {
+		testname string
 		username string
 		password string
 		u        *User
 	}{
-		{"", "admin", nil},
-		{"admin", "", nil},
-		{"admin", "admin", &admin},
-		{"admin", GenerateBase64(10), nil},
-		{"u1", "u1", nil},
-		{"", "u1", nil},
-		{"u1", "", nil},
-		{"u1", GenerateBase64(10), nil},
-		{"u2", "u2", nil},
-		{"", "u2", nil},
-		{"u2", "", nil},
-		{"u2", GenerateBase64(10), nil},
-		{"u3", "u3", &u3},
-		{"", "u3", nil},
-		{"u3", "", nil},
-		{"u3", GenerateBase64(10), nil},
-		{"u4", "u4", &u4},
-		{"", "u4", nil},
-		{"u4", "", nil},
-		{"u4", GenerateBase64(10), nil},
+		{"tc_1", "", "admin", nil},
+		{"tc_2", "admin", "", nil},
+		{"tc_3", "admin", "admin", &admin},
+		{"tc_4", "admin", GenerateBase64(10), nil},
+		{"tc_5", "u1", "u1", nil},
+		{"tc_6", "", "u1", nil},
+		{"tc_7", "u1", "", nil},
+		{"tc_8", "u1", GenerateBase64(10), nil},
+		{"tc_9", "u2", "u2", nil},
+		{"tc_10", "", "u2", nil},
+		{"tc_11", "u2", "", nil},
+		{"tc_12", "u2", GenerateBase64(10), nil},
+		{"tc_13", u3.Username, u3Pass, &u3},
+		{"tc_14", "", "u3", nil},
+		{"tc_15", "u3", "", nil},
+		{"tc_16", "u3", GenerateBase64(10), nil},
+		{"tc_17", u4.Username, u4Pass, &u4},
+		{"tc_18", "", "u4", nil},
+		{"tc_19", "u4", "", nil},
+		{"tc_20", "u4", GenerateBase64(10), nil},
+		{"tc_21", "u2", u2Pass, &u2},
 	}
 	r := httptest.NewRequest("GET", "/", nil)
 
 	for _, e := range examples {
-		tempU, otpRequired := Login(r, e.username, e.password)
-		if (tempU == nil && e.u != nil) || (tempU != nil && e.u == nil) {
-			t.Errorf("Invalid output from Login: %v, expected %v", tempU, e.u)
-		} else if (tempU != nil && e.u != nil) && (tempU.User.ID != e.u.ID) {
-			t.Errorf("Invalid user ID from Login: %v, expected %v", tempU.User.ID, e.u.ID)
+		session, otpRequired := Login(r, e.username, e.password)
+		if (session == nil && e.u != nil) || (session != nil && e.u == nil) {
+			t.Errorf("Test #%s: Invalid output from Login: %v, expected %v", e.testname, session, e.u)
+		} else if (session != nil && e.u != nil) && (session.User.ID != e.u.ID) {
+			t.Errorf("Test #%s: Invalid user ID from Login: %v, expected %v", e.testname, session.User.ID, e.u.ID)
 		} else if (e.u != nil) && (otpRequired != e.u.OTPRequired) {
-			t.Errorf("Invalid OTPRequired output from Login: %v, expected %v", otpRequired, e.u.OTPRequired)
+			t.Errorf("Test #%s: Invalid OTPRequired output from Login: %v, expected %v", e.testname, otpRequired, e.u.OTPRequired)
 		}
 	}
 	Delete(u1)
@@ -452,10 +481,11 @@ func (t *UAdminTests) TestLogin2FA() {
 	// Setup
 
 	// user with otp required
+	u1Pass := "u1"+testPassword
 	u1 := User{}
 	u1.FirstName = "u1"
 	u1.Username = "u1"
-	u1.Password = "u1"
+	u1.Password = u1Pass
 	u1.Active = true
 	u1.Admin = false
 	u1.RemoteAccess = false
@@ -464,35 +494,36 @@ func (t *UAdminTests) TestLogin2FA() {
 	u1.Save()
 
 	examples := []struct {
+		testname   string
 		username   string
 		password   string
 		otp        string
 		u          *User
 		PendingOTP bool
 	}{
-		{"u1", "u1", "", &u1, true},
-		{"", "u1", "", nil, false},
-		{"u1", "", "", nil, false},
-		{"u1", GenerateBase64(10), "", nil, false},
-		{"u1", "u1", "000000", &u1, true},
-		{"", "u1", "000000", nil, false},
-		{"u1", "", "000000", nil, false},
-		{"u1", GenerateBase64(10), "000000", nil, false},
-		{"u1", "u1", u1.GetOTP(), &u1, false},
-		{"", "u1", u1.GetOTP(), nil, false},
-		{"u1", "", u1.GetOTP(), nil, false},
-		{"u1", GenerateBase64(10), u1.GetOTP(), nil, false},
+		{"tc_1", "u1", u1Pass, "", &u1, true},
+		{"tc_2", "", u1Pass, "", nil, false},
+		{"tc_3", "u1", "", "", nil, false},
+		{"tc_4", "u1", GenerateBase64(10), "", nil, false},
+		{"tc_5", "u1", u1Pass, "000000", &u1, true},
+		{"tc_6", "", u1Pass, "000000", nil, false},
+		{"tc_7", "u1", "", "000000", nil, false},
+		{"tc_8", "u1", GenerateBase64(10), "000000", nil, false},
+		{"tc_9", "u1", u1Pass, u1.GetOTP(), &u1, false},
+		{"tc_10", "", u1Pass, u1.GetOTP(), nil, false},
+		{"tc_11", "u1", "", u1.GetOTP(), nil, false},
+		{"tc_12", "u1", GenerateBase64(10), u1.GetOTP(), nil, false},
 	}
 	r := httptest.NewRequest("GET", "/", nil)
 
 	for i, e := range examples {
 		tempU := Login2FA(r, e.username, e.password, e.otp)
 		if (tempU == nil && e.u != nil) || (tempU != nil && e.u == nil) {
-			t.Errorf("Invalid output from Login: %v, expected %v in test %d", tempU, e.u, i)
+			t.Errorf("Test #%s: Invalid output from Login: %v, expected %v in test %d", e.testname, tempU, e.u, i)
 		} else if (tempU != nil && e.u != nil) && (tempU.User.ID != e.u.ID) {
-			t.Errorf("Invalid user ID from Login: %v, expected %v in test %d", tempU.User.ID, e.u.ID, i)
+			t.Errorf("Test #%s: Invalid user ID from Login: %v, expected %v in test %d", e.testname, tempU.User.ID, e.u.ID, i)
 		} else if tempU != nil && tempU.PendingOTP != e.PendingOTP {
-			t.Errorf("Invalid pending otp status Got: %v, expected %v in test %d", tempU.PendingOTP, e.PendingOTP, i)
+			t.Errorf("Test #%s: Invalid pending otp status Got: %v, expected %v in test %d", e.testname, tempU.PendingOTP, e.PendingOTP, i)
 		}
 	}
 	Delete(u1)

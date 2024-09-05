@@ -114,3 +114,9 @@ func (a *Approval) Save() {
 
 	Save(a)
 }
+
+// HideInDashboard indicates that startup register call
+// should hide this model in dashboard menu
+func (Approval) HideInDashboard() bool {
+	return true
+}

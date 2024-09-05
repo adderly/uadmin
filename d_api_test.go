@@ -3,7 +3,7 @@ package uadmin
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -13,7 +13,7 @@ import (
 func (t *UAdminTests) TestDAPI() {
 	u1 := &User{
 		Username:     "u1",
-		Password:     "u1",
+		Password:     "u1"+testPassword,
 		Active:       true,
 		RemoteAccess: true,
 		Admin:        true,
@@ -199,14 +199,14 @@ func (t *UAdminTests) TestDAPI() {
 
 		apiHandler(w, r)
 
-		buf, err := ioutil.ReadAll(w.Result().Body)
+		buf, err := io.ReadAll(w.Result().Body)
 		if err != nil {
 			t.Errorf("Unable to read dAPI response for example %d", i)
 			continue
 		}
 
 		if msg := e[i].validate(string(buf)); msg != "" {
-			t.Errorf(msg+" in example %d", e[i].url, i)
+			t.Errorf("test case #%d failed: '"+msg+"', return: '%s'", i, e[i].url, string(buf))
 		}
 	}
 	Delete(s1)

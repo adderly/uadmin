@@ -2,6 +2,7 @@ package uadmin
 
 import (
 	"fmt"
+	"github.com/uadmin/uadmin/helper"
 	"html/template"
 
 	//"github.com/jinzhu/gorm"
@@ -238,13 +239,16 @@ func getFormData(a interface{}, r *http.Request, session *Session, s *ModelSchem
 			for i := range f.Choices {
 				f.Choices[i].Selected = f.Choices[i].K == uint(fieldValue.Int())
 			}
-		} else if f.Type == cMULTILINGUAL {
+		} else if f.Type == cMULTILINGUAL || f.Type == cHTML_MULTILINGUAL {
 			value = fieldValue.Interface()
 			for i := range activeLangs {
-				f.Translations[i].Value = Translate(fmt.Sprint(value), activeLangs[i].Code, false)
+				val := helper.PrepForHTML(Translate(fmt.Sprint(value), activeLangs[i].Code, false))
+				f.Translations[i].Value = val
 				if f.ChangedBy != "" {
-					f.Translations[i].NewValue = Translate(fmt.Sprint(f.NewValue), activeLangs[i].Code, false)
-					f.Translations[i].OldValue = Translate(fmt.Sprint(f.OldValue), activeLangs[i].Code, false)
+					newVal := helper.PrepForHTML(Translate(fmt.Sprint(f.NewValue), activeLangs[i].Code, false))
+					f.Translations[i].NewValue = newVal
+					oldVal := helper.PrepForHTML(Translate(fmt.Sprint(f.OldValue), activeLangs[i].Code, false))
+					f.Translations[i].OldValue = oldVal
 				}
 			}
 		} else if f.Type == cLINK {

@@ -30,6 +30,7 @@ import (
 // If the value is -1, then the session cookie will not have
 // an expiry date.
 var CookieTimeout = -1
+var defaultCookieTimeout = int((time.Hour * 24).Seconds()) // 24 hours in seconds
 
 // Salt is added to password hashing
 var Salt = ""
@@ -92,12 +93,18 @@ func GenerateBase32(length int) string {
 	return tempKey
 }
 
-// hashPass Generates a hash from a password and salt
-func hashPass(pass string) string {
+// saltPassword prepares password to use in bcrypt algorithms
+func saltPassword(pass string) []byte {
 	password := []byte(pass + Salt)
 	if len(password) > 72 {
 		password = password[:72]
 	}
+	return password
+}
+
+// hashPass Generates a hash from a password and salt
+func hashPass(pass string) string {
+	password := saltPassword(pass)
 	hash, err := bcrypt.GenerateFromPassword(password, bcryptDiff)
 	if err != nil {
 		Trail(ERROR, "uadmin.auth.hashPass.GenerateFromPassword: %s", err)
@@ -119,6 +126,19 @@ func IsAuthenticated(r *http.Request) *Session {
 		return s
 	}
 	return nil
+}
+
+// SetCookieTimeout checks if CookieTimeout should be set to a custom value,
+// or to use the default value
+func SetCookieTimeout() {
+	CookieTimeout = defaultCookieTimeout
+
+	if ct := os.Getenv("COOKIE_TIMEOUT_SECONDS"); ct != "" {
+		timeout, err := strconv.Atoi(ct)
+		if err == nil {
+			CookieTimeout = int(timeout)
+		}
+	}
 }
 
 // SetSessionCookie sets the session cookie value, The the value passed in
@@ -1017,13 +1037,10 @@ func GetSchema(r *http.Request) string {
 }
 
 func verifyPassword(hash string, plain string) error {
-	password := []byte(plain + Salt)
+	password := saltPassword(plain)
 	hashedPassword := []byte(hash)
 	if len(hashedPassword) > 72 {
 		hashedPassword = hashedPassword[:72]
-	}
-	if len(password) > 72 {
-		password = password[:72]
 	}
 	return bcrypt.CompareHashAndPassword(hashedPassword, password)
 }

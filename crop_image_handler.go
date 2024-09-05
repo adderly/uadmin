@@ -95,7 +95,7 @@ func cropImageHandler(w http.ResponseWriter, r *http.Request, session *Session) 
 		return
 	}
 
-	ReturnJSON(w, r, map[string]string{"status": "okkkkkk"})
+	ReturnJSON(w, r, map[string]string{"status": "ok"})
 }
 
 func createImgFile(w http.ResponseWriter, r *http.Request, fType []string, f *os.File, mySubImage image.Image) (err error) {

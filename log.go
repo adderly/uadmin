@@ -190,3 +190,9 @@ func (l *Log) PasswordReset(user string, action Action, r *http.Request) (err er
 
 	return nil
 }
+
+// HideInDashboard indicates that startup register call
+// should hide this model in dashboard menu
+func (Log) HideInDashboard() bool {
+	return true
+}

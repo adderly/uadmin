@@ -80,6 +80,9 @@ func Register(m ...interface{}) {
 	// Setup languages
 	initializeLanguage()
 
+	// Setup cookie timeout
+	SetCookieTimeout()
+
 	// check if trail dashboard menu item is added
 	if Count([]DashboardMenu{}, "menu_name = ?", "Trail") == 0 {
 		dashboard := DashboardMenu{
