@@ -139,6 +139,8 @@ func formHandler(w http.ResponseWriter, r *http.Request, session *Session) {
 	}
 
 	// Add data to Schema
+	//TODO: Add checks for reporting error coming from this reflection
+	// synkhole, if for example you add gorm.DeletedAt at any models, the ui crashed without no apparent reason
 	getFormData(m.Interface(), r, session, &c.Schema, &user)
 	TranslateSchema(&c.Schema, c.Language.Code)
 

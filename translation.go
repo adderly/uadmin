@@ -3,7 +3,6 @@ package uadmin
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -28,7 +27,7 @@ type translation struct {
 // InitalizeLanguage !
 func initializeLanguage() {
 	// Load Multilanguage
-	// multiLanguage, err := ioutil.ReadFile("./templates/uadmin/multilingual.json")
+	// multiLanguage, err := os.ReadFile("./templates/uadmin/multilingual.json")
 
 	// if err != nil {
 	// 	multiLanguage = []byte{}
@@ -330,7 +329,7 @@ func Tf(path string, lang string, term string, args ...interface{}) string {
 				Trail(WARNING, "Unrecognized path (%s) - fileName:%s", path, fileName)
 				return term
 			}
-			buf, err = ioutil.ReadFile(fileName)
+			buf, err = os.ReadFile(fileName)
 			if err != nil {
 				Trail(ERROR, "Unable to read language file (%s)", fileName)
 				return term
@@ -342,7 +341,7 @@ func Tf(path string, lang string, term string, args ...interface{}) string {
 			Trail(WARNING, "Unrecognized path (%s) - fileName:%s", path, fileName)
 			return term
 		}
-		buf, err = ioutil.ReadFile(fileName)
+		buf, err = os.ReadFile(fileName)
 		if err != nil {
 			Trail(ERROR, "Unable to read language file (%s)", fileName)
 			return term
@@ -418,7 +417,7 @@ func TranslateSchema(s *ModelSchema, lang string) {
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		return
 	}
-	buf, err := ioutil.ReadFile(fileName)
+	buf, err := os.ReadFile(fileName)
 	if err != nil {
 		Trail(ERROR, "Unable to read language file (%s)", fileName)
 		return
