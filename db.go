@@ -893,7 +893,9 @@ func customGet(m interface{}, m2m ...string) (err error) {
 		}
 
 		// Check if there is any m2m fields
-		if t.Field(i).Type.Kind() == reflect.Slice && t.Field(i).Type.Elem().Kind() == reflect.Struct {
+
+		if !strings.Contains(t.Field(i).Tag.Get("uadmin"), "disable_m2m") &&
+			t.Field(i).Type.Kind() == reflect.Slice && t.Field(i).Type.Elem().Kind() == reflect.Struct {
 			table1 := strings.ToLower(t.Name())
 			table2 := strings.ToLower(t.Field(i).Type.Elem().Name())
 
