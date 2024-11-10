@@ -435,7 +435,9 @@ func processForm(modelName string, w http.ResponseWriter, r *http.Request, sessi
 		}
 		if hasCreatedAt {
 			if m.Elem().FieldByName("CreatedAt").Type() == DType {
-				m.Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(now))
+				if m.Elem().FieldByName("CreatedAt").IsZero() {
+					m.Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(now))
+				}
 			}
 			if m.Elem().FieldByName("CreatedAt").Type() == DType1 {
 				m.Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(&now))
