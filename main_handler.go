@@ -80,6 +80,10 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 			settingsHandler(w, r, session)
 			return
 		}
+		if URLParts[0] == "login" {
+			loginHandler(w, r)
+			return
+		}
 		listHandler(w, r, session)
 		return
 	} else if len(URLParts) == 2 {

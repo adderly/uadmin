@@ -71,6 +71,7 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 			"status":  "error",
 			"err_msg": "username taken",
 		})
+		return
 	}
 
 	// if the user is active, then login in
