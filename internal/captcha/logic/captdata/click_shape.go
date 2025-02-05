@@ -16,7 +16,7 @@ import (
 var shapeCapt click.Captcha
 
 func init() {
-	shapeCapt = click.NewWithShape(
+	builder := click.NewBuilder(
 		click.WithRangeLen(option.RangeVal{Min: 3, Max: 6}),
 		click.WithRangeVerifyLen(option.RangeVal{Min: 2, Max: 3}),
 		click.WithRangeThumbBgDistort(1),
@@ -37,10 +37,12 @@ func init() {
 	}
 
 	// set resources
-	shapeCapt.SetResources(
+	builder.SetResources(
 		click.WithShapes(shapeMaps),
 		click.WithBackgrounds(imgs),
 	)
+
+	shapeCapt = builder.MakeWithShape()
 }
 
 // GetClickShapesCaptData .
@@ -61,7 +63,7 @@ func GetClickShapesCaptData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var masterImageBase64, thumbImageBase64 string
-	masterImageBase64 = captData.GetMasterImage().ToBase64()
+	masterImageBase64, err = captData.GetMasterImage().ToBase64()
 	if err != nil {
 		bt, _ := json.Marshal(map[string]interface{}{
 			"code":    1,
@@ -71,7 +73,7 @@ func GetClickShapesCaptData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thumbImageBase64 = captData.GetThumbImage().ToBase64()
+	thumbImageBase64, err = captData.GetThumbImage().ToBase64()
 	if err != nil {
 		bt, _ := json.Marshal(map[string]interface{}{
 			"code":    1,

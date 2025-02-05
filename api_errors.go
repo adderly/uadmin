@@ -2,7 +2,13 @@ package uadmin
 
 import (
 	"fmt"
+	"github.com/rotisserie/eris"
 	"net/http"
+)
+
+var (
+	E_UsernameTaken   = eris.New("username already taken")
+	E_InvalidPassword = eris.New("Password errors")
 )
 
 const (

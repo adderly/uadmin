@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"github.com/uadmin/uadmin/internal/captcha/helper"
+	"github.com/wenlng/go-captcha/v2/base/option"
 	"log"
 	"net/http"
 
@@ -15,7 +16,9 @@ import (
 var rotateBasicCapt rotate.Captcha
 
 func init() {
-	rotateBasicCapt = rotate.New()
+	builder := rotate.NewBuilder(rotate.WithRangeAnglePos([]option.RangeVal{
+		{Min: 20, Max: 330},
+	}))
 
 	// background images
 	imgs, err := images.GetImages()
@@ -24,9 +27,11 @@ func init() {
 	}
 
 	// set resources
-	rotateBasicCapt.SetResources(
+	builder.SetResources(
 		rotate.WithImages(imgs),
 	)
+
+	rotateBasicCapt = builder.Make()
 }
 
 // GetRotateBasicCaptData .
@@ -47,7 +52,7 @@ func GetRotateBasicCaptData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var masterImageBase64, thumbImageBase64 string
-	masterImageBase64 = captData.GetMasterImage().ToBase64()
+	masterImageBase64, err = captData.GetMasterImage().ToBase64()
 	if err != nil {
 		bt, _ := json.Marshal(map[string]interface{}{
 			"code":    1,
@@ -57,7 +62,7 @@ func GetRotateBasicCaptData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thumbImageBase64 = captData.GetThumbImage().ToBase64()
+	thumbImageBase64, err = captData.GetThumbImage().ToBase64()
 	if err != nil {
 		bt, _ := json.Marshal(map[string]interface{}{
 			"code":    1,
