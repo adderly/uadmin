@@ -5,12 +5,19 @@ import (
 	"time"
 )
 
+// ====================================================================================
+// ====================================================================================
+// @TODO: In a production environment, caching middleware such as Redis would be used
+// ====================================================================================
+// ====================================================================================
+
+// cachedata
 type cachedata = struct {
 	data     []byte
 	createAt time.Time
 }
 
-var mux sync.Mutex
+var mux sync.RWMutex
 
 var cachemaps = make(map[string]*cachedata)
 
@@ -26,8 +33,8 @@ func WriteCache(key string, data []byte) {
 
 // ReadCache .
 func ReadCache(key string) []byte {
-	mux.Lock()
-	defer mux.Unlock()
+	mux.RLock()
+	defer mux.RUnlock()
 	if cd, ok := cachemaps[key]; ok {
 		return cd.data
 	}
@@ -42,6 +49,20 @@ func ClearCache(key string) {
 	delete(cachemaps, key)
 }
 
+// ClearCaches .
+func ClearCaches(keys []string) {
+	if len(keys) == 0 {
+		return
+	}
+
+	mux.Lock()
+	defer mux.Unlock()
+
+	for _, key := range keys {
+		delete(cachemaps, key)
+	}
+}
+
 // RunTimedTask .
 func RunTimedTask() {
 	ticker := time.NewTicker(time.Minute * 5)
@@ -53,6 +74,7 @@ func RunTimedTask() {
 }
 
 func checkCacheOvertimeFile() {
+	mux.RLock()
 	var keys = make([]string, 0)
 	for key, data := range cachemaps {
 		ex := time.Now().Unix() - data.createAt.Unix()
@@ -60,8 +82,7 @@ func checkCacheOvertimeFile() {
 			keys = append(keys, key)
 		}
 	}
+	mux.RUnlock()
 
-	for _, key := range keys {
-		ClearCache(key)
-	}
+	ClearCaches(keys)
 }

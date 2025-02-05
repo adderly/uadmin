@@ -3,6 +3,7 @@ package uadmin
 import (
 	"errors"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"net"
 	"net/http"
 	"strings"
@@ -41,8 +42,8 @@ func (u User) String() string {
 
 // Save !
 func (u *User) Save() {
-	err := u.Validate()
-	if len(err) != 0 {
+	err, _ := u.Validate()
+	if err != nil {
 		return
 	}
 
@@ -237,36 +238,39 @@ func (u *User) GetAccess(modelName string) UserPermission {
 }
 
 // Validate user when saving from uadmin
-func (u User) Validate() (ret map[string]string) {
+func (u User) Validate() (err error, ret map[string]string) {
 	ret = map[string]string{}
 
 	userNameErrMess := u.validateUserName()
-	if userNameErrMess != "" {
-		ret["Username"] = userNameErrMess
+	if userNameErrMess != nil {
+		ret["Username"] = userNameErrMess.Error()
+		err = userNameErrMess
 	}
 
 	passErrMess := u.validatePass()
-	if passErrMess != "" {
-		ret["Password"] = passErrMess
+	if passErrMess != nil {
+		ret["Password"] = passErrMess.Error()
+		err = passErrMess
 	}
+
 	return
 }
 
-func (u User) validateUserName() string {
+func (u User) validateUserName() error {
 	if u.ID == 0 {
 		Get(&u, "username=?", strings.ToLower(u.Username))
 		if u.ID > 0 {
-			return "Username is already Taken."
+			return E_UsernameTaken
 		}
 	}
-	return ""
-}	
+	return nil
+}
 
-func (u User) validatePass() string {
+func (u User) validatePass() error {
 	validator := helper.NewPasswordValidator()
 	err := validator.Validate(u.Password)
 	if err != nil {
-		return fmt.Sprintf("invalid password: %s", err)
+		return eris.Wrapf(E_InvalidPassword, "invalid password: %s", err)
 	}
 
 	// check if new password same as previous
@@ -275,11 +279,11 @@ func (u User) validatePass() string {
 		Get(&prevUser, "id=?", u.ID)
 		compareErr := verifyPassword(prevUser.Password, u.Password)
 		if compareErr == nil {
-			return "sorry, you can't use the same password"
+			return eris.Wrapf(E_InvalidPassword, "sorry, you can't use the same password")
 		}
 	}
 
-	return ""
+	return nil
 }
 
 // Validate user when saving from uadmin

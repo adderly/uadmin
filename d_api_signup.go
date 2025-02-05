@@ -75,10 +75,20 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 		}
 	}
 
+	if err, _ := user.Validate(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ReturnJSON(w, r, map[string]interface{}{
+			"status":  "error",
+			"err_msg": err.Error(),
+		})
+		return
+	}
+
 	// Save user record
 	user.Save()
 
 	// Check if the record was not saved, that means the username is taken
+	//TODO: remove and validate with the badder
 	if user.ID == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		ReturnJSON(w, r, map[string]interface{}{
