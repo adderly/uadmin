@@ -19,7 +19,10 @@ func dAPISignupHandler(w http.ResponseWriter, r *http.Request, s *Session) {
 	firstName := r.FormValue("first_name")
 	lastName := r.FormValue("last_name")
 	password := r.FormValue("password")
+	proof := r.FormValue("proof")
 
+	if proof == "" {
+	}
 	// set the username to email if there is no username
 	if username == "" && email != "" {
 		username = email

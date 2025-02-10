@@ -533,3 +533,5 @@ var handlersRegistered = false
 var defaultProgressBarColor = "#07c"
 
 var settingsSynched = false
+
+var APIRegisterNeedProof = false
