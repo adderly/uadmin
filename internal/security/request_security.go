@@ -14,12 +14,14 @@ import "github.com/uadmin/uadmin"
 // 2 - Require user input for a specific action, like changing username or changing a system defined value
 //
 
+// Interface for implementing the service somewhere else
 type RequestSecurityProof interface {
 	Valid(token string) (error, bool)
 	Create(token string) (error, bool)
 	Remove(token string) (error, bool)
 }
 
+// this model can be set to save when users need a proof to make an action
 type Proof struct {
 	uadmin.Model
 	Token    string `json:"token"` //name of the code
