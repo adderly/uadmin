@@ -3,6 +3,7 @@ package checkdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"net/http"
 	"strconv"
@@ -72,4 +73,38 @@ func CheckClickData(w http.ResponseWriter, r *http.Request) {
 	})
 	_, _ = fmt.Fprintf(w, string(bt))
 	return
+}
+
+// CheckClickCaptcha .
+func CheckClickCaptcha(dataDots string, cacheDataByte []byte) (error, int) {
+	code := 1
+	src := strings.Split(dataDots, ",")
+
+	var dct map[int]*click.Dot
+	if err := json.Unmarshal(cacheDataByte, &dct); err != nil {
+		return eris.New("illegal key click"), code
+	}
+
+	chkRet := false
+	if (len(dct) * 2) == len(src) {
+		for i := 0; i < len(dct); i++ {
+			dot := dct[i]
+			j := i * 2
+			k := i*2 + 1
+			sx, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[j]), 64)
+			sy, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[k]), 64)
+
+			chkRet = click.CheckPoint(int64(sx), int64(sy), int64(dot.X), int64(dot.Y), int64(dot.Width), int64(dot.Height), 0)
+			if !chkRet {
+				break
+			}
+		}
+	}
+
+	// ret == ok
+	if chkRet {
+		return nil, 0
+	}
+
+	return eris.New("invalid data provided"), code
 }

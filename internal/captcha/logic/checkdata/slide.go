@@ -3,6 +3,7 @@ package checkdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"net/http"
 	"strconv"
@@ -63,4 +64,29 @@ func CheckSlideData(w http.ResponseWriter, r *http.Request) {
 	})
 	_, _ = fmt.Fprintf(w, string(bt))
 	return
+}
+
+// CheckSlideCaptcha .
+func CheckSlideCaptcha(dataPoint string, cacheDataByte []byte) (error, int) {
+	code := 1
+
+	src := strings.Split(dataPoint, ",")
+
+	var dct *slide.Block
+	if err := json.Unmarshal(cacheDataByte, &dct); err != nil {
+		return eris.New("illegal key rotate"), code
+	}
+
+	chkRet := false
+	if 2 == len(src) {
+		sx, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[0]), 64)
+		sy, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[1]), 64)
+		chkRet = slide.CheckPoint(int64(sx), int64(sy), int64(dct.X), int64(dct.Y), 4)
+	}
+	// ret == ok
+	if chkRet {
+		return nil, 0
+	}
+
+	return eris.New("invalid data provided"), code
 }

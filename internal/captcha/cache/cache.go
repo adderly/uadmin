@@ -42,6 +42,17 @@ func ReadCache(key string) []byte {
 	return []byte{}
 }
 
+// CheckKey .
+func CheckKey(key string) bool {
+	mux.RLock()
+	defer mux.RUnlock()
+	if _, ok := cachemaps[key]; ok {
+		return ok
+	}
+
+	return false
+}
+
 // ClearCache .
 func ClearCache(key string) {
 	mux.Lock()

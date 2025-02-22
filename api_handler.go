@@ -53,7 +53,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasPrefix(Path, "/captcha") {
-		captcha.CaptchaHandler(w, r)
+		captcha.CaptchaHttpHandler(w, r)
 		return
 	}
 }

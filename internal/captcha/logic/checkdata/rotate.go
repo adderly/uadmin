@@ -3,6 +3,7 @@ package checkdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"net/http"
 	"strconv"
@@ -57,4 +58,24 @@ func CheckRotateData(w http.ResponseWriter, r *http.Request) {
 	})
 	_, _ = fmt.Fprintf(w, string(bt))
 	return
+}
+
+// CheckRotateCaptcha .
+func CheckRotateCaptcha(dataAngle string, cacheDataByte []byte) (error, int) {
+	code := 1
+
+	var dct *rotate.Block
+	if err := json.Unmarshal(cacheDataByte, &dct); err != nil {
+		return eris.New("illegal key rotate"), code
+	}
+
+	sAngle, _ := strconv.ParseFloat(fmt.Sprintf("%v", dataAngle), 64)
+	chkRet := rotate.CheckAngle(int64(sAngle), int64(dct.Angle), 2)
+
+	// ret == ok
+	if chkRet {
+		return nil, 0
+	}
+
+	return eris.New("invalid data provided"), code
 }

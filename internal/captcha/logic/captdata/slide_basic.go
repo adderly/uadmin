@@ -3,6 +3,7 @@ package captdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"github.com/uadmin/uadmin/internal/captcha/helper"
 	"log"
@@ -103,4 +104,47 @@ func GetSlideBasicCaptData(w http.ResponseWriter, r *http.Request) {
 		"tile_y":       blockData.TileY,
 	})
 	_, _ = fmt.Fprintf(w, string(bt))
+}
+
+// GenSlideBasicCaptData .
+func GenSlideBasicCaptData(w http.ResponseWriter, r *http.Request) (error, int, []byte) {
+	captData, err := slideBasicCapt.Generate()
+	if err != nil {
+		return err, 1, nil
+	}
+
+	blockData := captData.GetData()
+	if blockData == nil {
+		return eris.New("gen captcha data failed"), 1, nil
+	}
+
+	var masterImageBase64, tileImageBase64 string
+	masterImageBase64, err = captData.GetMasterImage().ToBase64()
+	if err != nil {
+
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	tileImageBase64, err = captData.GetTileImage().ToBase64()
+	if err != nil {
+
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	dotsByte, _ := json.Marshal(blockData)
+	key := helper.StringToMD5(string(dotsByte))
+	cache.WriteCache(key, dotsByte)
+
+	bt, _ := json.Marshal(map[string]interface{}{
+		"code":         0,
+		"captcha_key":  key,
+		"image_base64": masterImageBase64,
+		"tile_base64":  tileImageBase64,
+		"tile_width":   blockData.Width,
+		"tile_height":  blockData.Height,
+		"tile_x":       blockData.TileX,
+		"tile_y":       blockData.TileY,
+	})
+
+	return nil, 0, bt
 }

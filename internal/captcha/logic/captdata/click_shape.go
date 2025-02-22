@@ -3,6 +3,7 @@ package captdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"github.com/uadmin/uadmin/internal/captcha/helper"
 	"github.com/wenlng/go-captcha-assets/resources/images"
@@ -94,4 +95,41 @@ func GetClickShapesCaptData(w http.ResponseWriter, r *http.Request) {
 		"thumb_base64": thumbImageBase64,
 	})
 	_, _ = fmt.Fprintf(w, string(bt))
+}
+
+// GenClickShapesCaptData .
+func GenClickShapesCaptData(w http.ResponseWriter, r *http.Request) (error, int, []byte) {
+	captData, err := shapeCapt.Generate()
+	if err != nil {
+		return err, 1, nil
+	}
+
+	dotData := captData.GetData()
+	if dotData == nil {
+		return eris.New("gen captcha data failed"), 1, nil
+	}
+
+	var masterImageBase64, thumbImageBase64 string
+	masterImageBase64, err = captData.GetMasterImage().ToBase64()
+	if err != nil {
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	thumbImageBase64, err = captData.GetThumbImage().ToBase64()
+	if err != nil {
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	dotsByte, _ := json.Marshal(dotData)
+	key := helper.StringToMD5(string(dotsByte))
+	cache.WriteCache(key, dotsByte)
+
+	bt, _ := json.Marshal(map[string]interface{}{
+		"code":         0,
+		"captcha_key":  key,
+		"image_base64": masterImageBase64,
+		"thumb_base64": thumbImageBase64,
+	})
+
+	return nil, 0, bt
 }

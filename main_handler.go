@@ -60,6 +60,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		homeHandler(w, r, session)
 		return
 	}
+
 	if len(URLParts) == 1 {
 		if URLParts[0] == "logout" {
 			logoutHandler(w, r, session)
@@ -85,6 +86,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 			loginHandler(w, r)
 			return
 		}
+
 		listHandler(w, r, session)
 		return
 	} else if len(URLParts) == 2 {

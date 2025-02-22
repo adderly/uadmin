@@ -3,6 +3,7 @@ package captdata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rotisserie/eris"
 	"github.com/uadmin/uadmin/internal/captcha/cache"
 	"github.com/uadmin/uadmin/internal/captcha/helper"
 	"log"
@@ -165,4 +166,50 @@ func GetClickBasicCaptData(w http.ResponseWriter, r *http.Request) {
 	})
 
 	_, _ = fmt.Fprintf(w, string(bt))
+}
+
+// GenClickBasicCaptData .
+func GenClickBasicCaptData(w http.ResponseWriter, r *http.Request) (error, int, []byte) {
+	var capt click.Captcha
+	if r.URL.Query().Get("type") == "light" {
+		capt = lightTextCapt
+	} else {
+		capt = textCapt
+	}
+
+	captData, err := capt.Generate()
+	if err != nil {
+		return err, 1, nil
+	}
+
+	dotData := captData.GetData()
+	if dotData == nil {
+		return eris.New("gen captcha data failed"), 1, nil
+	}
+
+	var masterImageBase64, thumbImageBase64 string
+	masterImageBase64, err = captData.GetMasterImage().ToBase64()
+	if err != nil {
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	thumbImageBase64, err = captData.GetThumbImage().ToBase64()
+	if err != nil {
+		return eris.New("base64 data failed"), 1, nil
+	}
+
+	dotsByte, _ := json.Marshal(dotData)
+	key := helper.StringToMD5(string(dotsByte))
+	cache.WriteCache(key, dotsByte)
+
+	fmt.Println("dot>>>>>", string(dotsByte))
+
+	bt, _ := json.Marshal(map[string]interface{}{
+		"code":         0,
+		"captcha_key":  key,
+		"image_base64": masterImageBase64,
+		"thumb_base64": thumbImageBase64,
+	})
+
+	return nil, 0, bt
 }
