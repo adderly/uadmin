@@ -51,22 +51,22 @@ func CaptchaHttpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		err, _, rs := CaptchaGen(w, r)
 		if err != nil {
-			_, _ = fmt.Fprintf(w, string(rs))
-			w.WriteHeader(http.StatusOK)
-		} else {
 			_, _ = fmt.Fprintf(w, err.Error())
 			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			_, _ = fmt.Fprintf(w, string(rs))
+			w.WriteHeader(http.StatusOK)
 		}
 
 		return
 	} else if r.Method == "POST" {
 		err, code := CaptchaCheck(w, r)
 		if err != nil {
-			_, _ = fmt.Fprintf(w, string(code))
-			w.WriteHeader(http.StatusOK)
-		} else {
 			_, _ = fmt.Fprintf(w, err.Error())
 			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			_, _ = fmt.Fprintf(w, string(code))
+			w.WriteHeader(http.StatusOK)
 		}
 		return
 	}
@@ -75,7 +75,7 @@ func CaptchaHttpHandler(w http.ResponseWriter, r *http.Request) {
 func CaptchaGen(w http.ResponseWriter, req *http.Request) (error, int, []byte) {
 	_ = req.ParseForm()
 
-	captchaType := req.Form.Get("captchaType")
+	captchaType := req.FormValue("captchaType")
 
 	captchaTypeVal, err := strconv.Atoi(captchaType)
 	if err != nil {
