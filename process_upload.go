@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/segmentio/fasthash/fnv1a"
 	"image"
 	"image/gif"
 	"image/jpeg"
@@ -276,8 +277,15 @@ type UploadConf struct {
 	Overwrite bool
 	//The folder name for the files to be stored in
 	FolderName string
+
 	// TODO: The filename will be a hash instead of the filename.ext -> 87sjs9s3dyj.ext
 	HashedName bool
+
+	//Hash seed, in case we want to get those names back
+	HashSeed string
+
+	// Max upload size, if the specific request should handle bigger files
+	MaxUploadFileSize int64
 }
 
 func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (val string, errRs error) {
@@ -287,6 +295,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		httpFile multipart.File
 		handler  *multipart.FileHeader
 		err      error
+		isBase64 bool
 	)
 
 	if session.ThroughAPI {
@@ -295,34 +304,33 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		httpFile, handler, err = r.FormFile(uploadConf.FieldDef.Name)
 	}
 
-	isBase64 := false
+	formRawString := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
 
-	if err != nil {
-		if r.Form.Get(uploadConf.FieldDef.Name+"-raw") != "" {
-			isBase64 = true
-		} else {
-			return "", errors.New("field name not found in form")
-		}
-	} else {
-		defer httpFile.Close()
+	if err != nil && formRawString != "" {
+		isBase64 = true
+	} else if err != nil && formRawString == "" {
+		return "", errors.New("field name not found in form")
+	} else if handler.Filename == "" {
+		return "", errors.New("no file is uploaded")
 	}
 
-	// return "", s if there is no file uploaded
-	if !isBase64 {
-		if handler.Filename == "" {
-			return "", errors.New("no file is uploaded")
-		}
+	defer httpFile.Close()
+
+	maxFileSize := MaxUploadFileSize
+
+	if uploadConf.MaxUploadFileSize > 0 {
+		maxFileSize = uploadConf.MaxUploadFileSize
 	}
 
 	if isBase64 {
-		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		getF := formRawString
 		filesize := float64(len(getF)-strings.Index(getF, "://")) * 0.75
-		if int64(filesize) > MaxUploadFileSize {
+		if int64(filesize) > maxFileSize {
 			uploadConf.FieldDef.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", MaxUploadFileSize/1024/1024)
 			return "", errors.New(uploadConf.FieldDef.ErrMsg)
 		}
 	} else {
-		if handler.Size > MaxUploadFileSize {
+		if handler.Size > maxFileSize {
 			uploadConf.FieldDef.ErrMsg = fmt.Sprintf("File is too large. Maximum upload file size is: %d Mb", MaxUploadFileSize/1024/1024)
 			return "", errors.New(uploadConf.FieldDef.ErrMsg)
 		}
@@ -333,6 +341,8 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 	if uploadConf.FieldDef.UploadTo != "" {
 		uploadTo = uploadConf.FieldDef.UploadTo
 	}
+
+	//check if directory exists
 	if _, err = os.Stat("." + uploadTo); os.IsNotExist(err) {
 		err = os.MkdirAll("."+uploadTo, 0755)
 		if err != nil {
@@ -347,7 +357,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 	var pathName string
 	var fParts []string
 	if isBase64 {
-		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		getF := formRawString
 		fName = getF[0:strings.Index(getF, "://")]
 		fParts = strings.Split(fName, ".")
 	} else {
@@ -357,29 +367,40 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		fName = strings.Replace(fName, "..", "_", -1)
 		fParts = strings.Split(fName, ".")
 	}
+
+	// The field type image, was uploaded without extension
+	if uploadConf.FieldDef.Type == cIMAGE && len(fParts) < 1 {
+		uploadConf.FieldDef.ErrMsg = "Image file with no extension. Please use png, jpg, jpeg or gif."
+		return "", errors.New(uploadConf.FieldDef.ErrMsg)
+	}
+
 	fExt := strings.ToLower(fParts[len(fParts)-1])
+	filenameNoExtension := strings.TrimSuffix(fName, "."+fExt)
+	filenameWithExtension := fName
+
+	if uploadConf.FieldDef.Type == cIMAGE && len(fParts) > 1 {
+		filenameWithExtension = filenameNoExtension + "_raw." + fExt
+	}
+
+	if uploadConf.HashedName {
+		filenameNoExtension = fashFile(filenameNoExtension)
+		filenameWithExtension = fashFile(filenameNoExtension) + "." + fExt
+	}
 
 	//Use the specified folder
 	if len(uploadConf.FolderName) > 0 {
 		pathName = "." + uploadTo + uploadConf.FolderName + "_" + uploadConf.FieldDef.Name + "/"
 	} else {
+	nice:
 		pathName = "." + uploadTo + uploadConf.FieldDef.ModelName + "_" + uploadConf.FieldDef.Name + "_" + GenerateBase64(10) + "/"
-		if uploadConf.FieldDef.Type == cIMAGE && len(fParts) > 1 {
-			fName = strings.TrimSuffix(fName, "."+fExt) + "_raw." + fExt
-		} else if uploadConf.FieldDef.Type == cIMAGE {
-			uploadConf.FieldDef.ErrMsg = "Image file with no extension. Please use png, jpg, jpeg or gif."
-			return "", errors.New(uploadConf.FieldDef.ErrMsg)
-		}
-
 		//Finds a new path location if exists
-		for _, err = os.Stat(pathName + fName); os.IsExist(err); {
-			pathName = "." + uploadTo + uploadConf.FieldDef.ModelName + "_" + uploadConf.FieldDef.Name + "_" + GenerateBase64(10) + "/"
+		for _, err = os.Stat(pathName + filenameWithExtension); os.IsExist(err); {
+			goto nice
 		}
-
 	}
 
 	// Sanitize the file name
-	fName = pathName + path.Clean(fName)
+	filenameLocation := pathName + path.Clean(filenameWithExtension)
 
 	err = os.MkdirAll(pathName, 0755)
 	if err != nil {
@@ -388,7 +409,8 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		return "", errors.New(errorStr)
 	}
 
-	fRaw, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE, DefaultMediaPermission)
+	//Save original raw file
+	fRaw, err := os.OpenFile(filenameLocation, os.O_WRONLY|os.O_CREATE, DefaultMediaPermission)
 	if err != nil {
 		errorStr := fmt.Sprintf("processForm.OpenFile. unable to create file. %s", err)
 		Trail(ERROR, errorStr)
@@ -397,7 +419,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 
 	// Copy http file to local
 	if isBase64 {
-		getF := r.Form.Get(uploadConf.FieldDef.Name + "-raw")
+		getF := formRawString
 		data, err := base64.StdEncoding.DecodeString(getF[strings.Index(getF, "://")+3 : len(getF)])
 		if err != nil {
 			errorStr := fmt.Sprintf("ProcessForm error decoding base64. %s", err)
@@ -422,10 +444,10 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 
 	// store the file path to DB
 	if uploadConf.FieldDef.Type == cFILE {
-		val = fmt.Sprint(strings.TrimPrefix(fName, "."))
+		val = fmt.Sprint(strings.TrimPrefix(filenameLocation, "."))
 	} else {
 		// If case it is an image, process it first
-		fRaw, err = os.Open(fName)
+		fRaw, err = os.Open(filenameLocation)
 		if err != nil {
 			errorStr := fmt.Sprintf("ProcessForm.Open %s", err)
 			Trail(ERROR, errorStr)
@@ -444,6 +466,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 			uploadConf.FieldDef.ErrMsg = "Unknown image file extension. Please use, png, jpg/jpeg or gif"
 			return "", errors.New(uploadConf.FieldDef.ErrMsg)
 		}
+
 		if err != nil {
 			uploadConf.FieldDef.ErrMsg = "Unknown image format or image corrupted."
 			Trail(WARNING, "ProcessForm.Decode %s", err)
@@ -483,7 +506,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		}
 
 		// Store the active file
-		fActiveName := strings.Replace(fName, "_raw", "", -1)
+		fActiveName := strings.Replace(filenameLocation, "_raw", "", -1)
 		fActive, err := os.Create(fActiveName)
 		if err != nil {
 			errorStr := fmt.Sprintf("ProcessForm.Create unable to create file for resized image. %s", err)
@@ -492,7 +515,7 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 		}
 		defer fActive.Close()
 
-		fRaw, err = os.OpenFile(fName, os.O_WRONLY, 0644)
+		fRaw, err = os.OpenFile(filenameLocation, os.O_WRONLY, 0644)
 		if err != nil {
 			errorStr := fmt.Sprintf("ProcessForm.Open %s", err)
 			Trail(ERROR, errorStr)
@@ -565,4 +588,10 @@ func ProcessUpload(r *http.Request, uploadConf UploadConf, session *Session) (va
 	}
 
 	return val, err
+}
+
+func fashFile(filenameString string) string {
+	h1 := fnv1a.HashString64(filenameString)
+	fmt.Printf("FNV-1a hash of '%v': %v", filenameString, h1)
+	return fmt.Sprint(h1)
 }
